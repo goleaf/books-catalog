@@ -1,0 +1,18 @@
+// Import Bootstrap's SCSS
+@import 'bootstrap/scss/bootstrap';
+
+body {
+  font-family: 'Nunito', sans-serif;
+}
+
+.navbar {
+  background-color: #343a40;
+}
+
+.navbar-brand, .nav-link {
+  color: #ffffff;
+}
+
+.container {
+  margin-top: 20px;
+}
