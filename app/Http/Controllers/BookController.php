@@ -7,10 +7,6 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
 
     public function index()
     {
@@ -23,25 +19,16 @@ class BookController extends Controller
         return view('books.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreBookRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'isbn' => 'required|string|max:13|unique:books',
-            'publication_date' => 'required|date',
-            'genre' => 'required|string|max:255',
-            'number_of_copies' => 'required|integer',
-        ]);
-
-        Book::create($request->all());
+        Book::create($request->validated());
 
         return redirect()->route('books.index')->with('success', 'Book added.');
     }
 
     public function show(Book $book)
     {
-        // TODO view
+        return view('books.show', compact('book'));
     }
 
     public function edit(Book $book)
@@ -49,18 +36,9 @@ class BookController extends Controller
         return view('books.edit', compact('book'));
     }
 
-    public function update(Request $request, Book $book)
+    public function update(UpdateBookRequest $request, Book $book)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'isbn' => 'required|string|max:13|unique:books,isbn,' . $book->id,
-            'publication_date' => 'required|date',
-            'genre' => 'required|string|max:255',
-            'number_of_copies' => 'required|integer',
-        ]);
-
-        $book->update($request->all());
+        $book->update($request->validated());
 
         return redirect()->route('books.index')->with('success', 'Book updated.');
     }

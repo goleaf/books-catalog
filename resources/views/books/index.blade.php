@@ -2,6 +2,25 @@
 
 @section('content')
     <div class="container">
+
+
+        @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+
         <h1>Book list</h1>
         <a href="{{ route('books.create') }}" class="btn btn-primary mb-3">Add new book</a>
 

@@ -1,3 +1,2 @@
-// import './bootstrap';
-// resources/js/app.js
+import './bootstrap';
 import '../sass/app.scss';
