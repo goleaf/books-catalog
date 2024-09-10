@@ -30,13 +30,31 @@ It provides a seamless interface for performing CRUD (Create, Read, Update, Dele
     * Uses Font Awesome icons for visual clarity.
     * Maintains a consistent and visually appealing design.
 
-## Technical Stack
+## Tech Stack
+
+**Backend**
 
 * **Laravel 10**
 * **Livewire 2**
-* **Bootstrap 5**
-* **Font Awesome**
-* **jQuery 3**
+* **PHP >= 8.3**
+* **Database: MySQL** (or another database supported by Laravel)
+
+**Frontend**
+
+* **Vite**
+* **Bootstrap 5.3.3**
+* **Font Awesome 6.6.0**
+* **jQuery 3.7.1**
+* **Sass**
+
+**Development Tools**
+
+* **Laravel Debugbar**
+* **Laravel IDE Helper**
+* **Laravel Pint**
+* **Laravel Sail**
+* **PHPUnit**
+* **Spatie Laravel Ignition**
 
 ## Installation and Setup
 
