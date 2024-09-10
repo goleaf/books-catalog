@@ -4,15 +4,18 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use App\Models\Book;
+use App\Http\Requests\StoreBookRequest;
+use App\Http\Requests\UpdateBookRequest;
+use Illuminate\Validation\Rule;
 
 class Books extends Component
 {
-    public $books, $book,  
- $showModal = false, $editMode = false;
+    public $books = [];
+    public $book;
+    public $showModal = false;
+    public $editMode = false;
 
-    protected $rules = [
-
-    ];
+    protected $listeners = ['bookDeleted' => 'loadBooks'];
 
     public function mount()
     {
@@ -32,12 +35,20 @@ class Books extends Component
 
     public function store()
     {
-        $this->validate();
-
-        Book::create($this->book);
-
-        $this->showModal = false;
-        $this->loadBooks();
+        try {
+            $this->validate(StoreBookRequest::rules());
+            Book::create($this->book);
+            $this->showModal = false;
+            $this->emit('bookAdded');
+        } catch (\Illuminate\Database\QueryException $e) {
+            session()->flash('error', 'Database error: ' . $e->getMessage());
+            Log::error('Error adding book:', ['exception' => $e]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred while adding the book.');
+            Log::error('Error adding book:', ['exception' => $e]);
+        } finally {
+            $this->loadBooks();
+        }
     }
 
     public function edit(Book $book)
@@ -49,22 +60,49 @@ class Books extends Component
 
     public function update()
     {
-        $this->validate();
-
-        $this->book->save();
-
-        $this->showModal = false;
-        $this->loadBooks();
+        try {
+            $this->validate(UpdateBookRequest::rules());
+            $this->book->save();
+            $this->showModal = false;
+            $this->emit('bookUpdated');
+        } catch (\Illuminate\Database\QueryException $e) {
+            session()->flash('error', 'Database error: ' . $e->getMessage());
+            Log::error('Error updating book:', ['exception' => $e]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred while updating the book.');
+            Log::error('Error updating book:', ['exception' => $e]);
+        } finally {
+            $this->loadBooks();
+        }
     }
 
     public function delete(Book $book)
     {
-        $book->delete();
-        $this->loadBooks();
+        try {
+            $book->delete();
+            $this->emit('bookDeleted');
+        } catch (\Illuminate\Database\QueryException $e) {
+            session()->flash('error', 'Database error: ' . $e->getMessage());
+            Log::error('Error deleting book:', ['exception' => $e]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred while deleting the book.');
+            Log::error('Error deleting book:', ['exception' => $e]);
+        } finally {
+            $this->loadBooks();
+        }
     }
 
     public function render()
     {
-        return view('livewire.books');
+//        return view('livewire.books');
+
+        return view('livewire.books')
+            ->layout('layouts.app', ['title' => $this->books]);
     }
 }
+
+
+
+
+
+

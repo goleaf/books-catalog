@@ -3,7 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Books;
 
-Route::get('/', Books::class)->name('books.index');
+//Route::get('/', Books::class)->name('books.index');
+
+Route::get('/', function () {
+    return view('books.index');
+})->name('books.index');
 
 /*
 Route::prefix('books')->group(function () {
