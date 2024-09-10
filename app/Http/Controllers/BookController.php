@@ -28,11 +28,6 @@ class BookController extends Controller
         return redirect()->route('books.index')->with('success', 'Book added.');
     }
 
-    public function show(Book $book)
-    {
-        return view('books.show', compact('book'));
-    }
-
     public function edit(Book $book)
     {
         return view('books.edit', compact('book'));
