@@ -21,7 +21,7 @@
             </div>
             <div class="form-group">
                 <label for="publication_date">Publication date</label>
-                <input type="date" class="form-control" id="publication_date" name="publication_date" value="{{ old('publication_date', $book->publication_date->format('Y-m-d')) }}" required>
+                <input type="date" class="form-control" id="publication_date" name="publication_date" value="{{ old('publication_date', $book->publication_date) }}" required>
             </div>
             <div class="form-group">
                 <label for="genre">Genre</label>

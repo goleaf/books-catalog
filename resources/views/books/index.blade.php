@@ -45,16 +45,23 @@
                         <td>{{ $book->title }}</td>
                         <td>{{ $book->author }}</td>
                         <td>{{ $book->isbn }}</td>
-                        <td>{{ $book->publication_date->format('Y-m-d') }}</td>
+                        <td>{{ $book->publication_date }}</td>
                         <td>{{ $book->genre }}</td>
                         <td>{{ $book->number_of_copies }}</td>
                         <td>
                             <a href="{{ route('books.edit', $book->id) }}" class="btn btn-warning btn-sm">Edit</a>
-                            <form action="{{ route('books.destroy', $book->id) }}" method="POST" style="display:inline;">
+
+                            <form action="{{ route('books.destroy', $book->id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete();">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                             </form>
+
+                            <script>
+                                function confirmDelete() {
+                                    return confirm("Are you sure you want to delete this book?");
+                                }
+                            </script>
                         </td>
                     </tr>
                 @endforeach

@@ -4,22 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Catalog</title>
-    @vite('resources/js/app.js')   <!-- Include Vite JS asset -->
-    @vite('resources/sass/app.scss') <!-- Include Vite CSS asset -->
+    @vite('resources/js/app.js')
+    @vite('resources/sass/app.scss')
 </head>
 <body>
 <div id="app">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{{ url('/') }}">Book Catalog</a>
+        <a class="navbar-brand" href="{{ route('books.index') }}">Book Catalog</a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav mr-auto">
 
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('books.create') }}">Add new</a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('books.index') }}">Books</a>
                 </li>
 
             </ul>
@@ -31,6 +27,6 @@
     </main>
 </div>
 
-@vite('resources/js/app.js')   <!-- Include Vite JS asset again if needed -->
+@vite('resources/js/app.js')
 </body>
 </html>
