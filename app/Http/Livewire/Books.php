@@ -81,6 +81,7 @@ class Books extends Component
         } finally {
             $this->showForm = false;
             $this->loadBooks();
+            session()->forget('error');
         }
     }
 
@@ -102,16 +103,17 @@ class Books extends Component
         try {
             $book = Book::find($this->book['id']);
             $book->update($this->book);
-            $this->showForm = false;
-            $this->emit('bookUpdated');
-            session()->flash('success', 'Book updated successfully!');
-            $this->loadBooks();
         } catch (\Illuminate\Database\QueryException $e) {
             session()->flash('error', 'Database error: ' . $e->getMessage());
             Log::error('Error updating book:', ['exception' => $e]);
         } catch (\Exception $e) {
             session()->flash('error', 'An error occurred while updating the book.');
             Log::error('Error updating book:', ['exception' => $e]);
+        } finally {
+            $this->showForm = false;
+            $this->loadBooks();
+            session()->flash('success', 'Book updated successfully!');
+            session()->forget('error');
         }
     }
 
