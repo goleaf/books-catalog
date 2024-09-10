@@ -25,10 +25,6 @@
                             </div>
                         @endif
 
-                        <a href="{{ route('books.create') }}" class="btn btn-primary mb-3">
-                            <i class="fas fa-plus-circle mr-2"></i> Add New Book
-                        </a>
-
                         @if ($books->isEmpty())
                             <p>No books found.</p>
                         @else

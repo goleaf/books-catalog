@@ -7,6 +7,7 @@
     @vite('resources/js/app.js')
     @vite('resources/sass/app.scss')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    @livewireStyles
 </head>
 <body>
 <div id="app">
@@ -21,9 +22,11 @@
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
+{{--
                         <a class="nav-link" href="{{ route('books.create') }}">
                             <i class="fas fa-plus-circle mr-2"></i> Add New
                         </a>
+                        --}}
                     </li>
                 </ul>
             </div>
@@ -35,8 +38,9 @@
     </main>
 </div>
 
-@vite('resources/js/app.js')
+@livewireScripts
 
+@vite('resources/js/app.js')
 @stack('scripts')
 
 </body>
