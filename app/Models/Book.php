@@ -9,6 +9,7 @@ class Book extends Model
 {
     use HasFactory;
 
+    protected $table = 'books';
     protected $fillable = [
         'title', 'author', 'isbn', 'publication_date', 'genre', 'number_of_copies'
     ];

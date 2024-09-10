@@ -15,6 +15,6 @@
         "vite": "^5.0.0"
     },
     "dependencies": {
-        "jquery": "^3.7.1"
+        "@fortawesome/fontawesome-free": "^6.6.0"
     }
 }
