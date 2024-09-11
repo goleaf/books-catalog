@@ -1,36 +1,39 @@
 @if ($books->isEmpty())
     <p>No books found.</p>
 @else
-    <table class="table table-hover">
+    <table class="table table-hover align-middle table-responsive">
         <thead>
         <tr class="filters">
             <td>
-                <input type="text" wire:model.debounce.500ms="searchTitle" class="form-control form-control-sm" placeholder="Search by title...">
+                {!! Form::text('searchTitle', $searchTitle, ['class' => 'form-control form-control-sm', 'placeholder' => 'Search by title...', 'wire:model.debounce.500ms' => 'searchTitle']) !!}
+                @error('searchTitle') <span class="text-danger">{{ $message }}</span> @enderror
             </td>
             <td>
-                <input type="text" wire:model.debounce.500ms="searchAuthor" class="form-control form-control-sm" placeholder="Search by author...">
+                {!! Form::text('searchAuthor', $searchAuthor, ['class' => 'form-control form-control-sm', 'placeholder' => 'Search by author...', 'wire:model.debounce.500ms' => 'searchAuthor']) !!}
+                @error('searchAuthor') <span class="text-danger">{{ $message }}</span> @enderror
             </td>
             <td>
-                <input type="text" wire:model.debounce.500ms="searchIsbn" class="form-control form-control-sm" placeholder="Search by ISBN...">
+                {!! Form::text('searchIsbn', $searchIsbn, ['class' => 'form-control form-control-sm', 'placeholder' => 'Search by ISBN...', 'wire:model.debounce.500ms' => 'searchIsbn']) !!}
+                @error('searchIsbn') <span class="text-danger">{{ $message }}</span> @enderror
             </td>
             <td>
                 <div class="d-flex flex-column">
-                    <input type="date" wire:model.defer="filterPublicationDateFrom" class="form-control form-control-sm mt-1" placeholder="From...">
-                    <input type="date" wire:model.defer="filterPublicationDateTo" class="form-control form-control-sm mt-1" placeholder="To...">
+                    {!! Form::date('filterPublicationDateFrom', $filterPublicationDateFrom, ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'From...', 'wire:model.defer' => 'filterPublicationDateFrom']) !!}
+                    @error('filterPublicationDateFrom') <span class="text-danger">{{ $message }}</span> @enderror
+                    {!! Form::date('filterPublicationDateTo', $filterPublicationDateTo, ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'To...', 'wire:model.defer' => 'filterPublicationDateTo']) !!}
+                    @error('filterPublicationDateTo') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </td>
             <td>
-                <select wire:model="filterGenre" class="form-select form-select-sm">
-                    <option value="">All Genres</option>
-                    @foreach($genres as $value => $label)
-                    <option value="{{ $value }}">{{ $label }}</option>
-                    @endforeach
-                </select>
+                {!! Form::select('filterGenre', $genres, $filterGenre, ['class' => 'form-select form-select-sm', 'wire:model' => 'filterGenre']) !!}
+                @error('filterGenre') <span class="text-danger">{{ $message }}</span> @enderror
             </td>
             <td>
                 <div class="d-flex flex-column">
-                    <input type="number" wire:model.defer="filterCopiesFrom" class="form-control form-control-sm mt-1" placeholder="From...">
-                    <input type="number" wire:model.defer="filterCopiesTo" class="form-control form-control-sm mt-1" placeholder="To...">
+                    {!! Form::number('filterCopiesFrom', $filterCopiesFrom, ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'From...', 'wire:model.defer' => 'filterCopiesFrom']) !!}
+                    @error('filterCopiesFrom') <span class="text-danger">{{ $message }}</span> @enderror
+                    {!! Form::number('filterCopiesTo', $filterCopiesTo, ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'To...', 'wire:model.defer' => 'filterCopiesTo']) !!}
+                    @error('filterCopiesTo') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </td>
             <td class="text-center">

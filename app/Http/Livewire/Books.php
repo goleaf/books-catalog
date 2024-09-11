@@ -7,29 +7,139 @@ use App\Models\Book;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
+/**
+ * Livewire component for managing books.
+ *
+ * This component handles the display, creation, editing, and deletion of book records.
+ */
 class Books extends Component
 {
-    public $books = [];
+    /**
+     * The collection of books to display in the list.
+     *
+     * @var \Illuminate\Database\Eloquent\Collection
+     */
+    public array|\Illuminate\Database\Eloquent\Collection $books = [];
+
+    /**
+     * The current book being edited or added.
+     * This is an associative array representing the book's attributes.
+     *
+     * @var array|null
+     */
     public $book;
+
+    /**
+     * Flag to control the visibility of the book form.
+     *
+     * @var bool
+     */
     public $showForm = false;
+
+    /**
+     * Flag to indicate if the form is in edit mode.
+     *
+     * @var bool
+     */
     public $editMode = false;
+
+    /**
+     * Success message to be displayed after a successful operation.
+     *
+     * @var string
+     */
     public $successMessage = '';
+
+    /**
+     * Array to store error messages.
+     *
+     * @var array
+     */
     public $errorMessages = [];
 
     // Search and filter properties
+    /**
+     * Search term for the title field.
+     *
+     * @var string
+     */
     public $searchTitle = '';
+
+    /**
+     * Search term for the author field.
+     *
+     * @var string
+     */
     public $searchAuthor = '';
+
+    /**
+     * Search term for the ISBN field.
+     *
+     * @var string
+     */
     public $searchIsbn = '';
+
+    /**
+     * Selected genre for filtering.
+     *
+     * @var string
+     */
     public $filterGenre = '';
+
+    /**
+     * Minimum number of copies for filtering.
+     *
+     * @var int|null
+     */
     public $filterCopiesFrom = null;
+
+    /**
+     * Maximum number of copies for filtering.
+     *
+     * @var int|null
+     */
     public $filterCopiesTo = null;
+
+    /**
+     * The column to sort the book list by.
+     *
+     * @var string
+     */
     public $sortBy = 'title';
+
+    /**
+     * The sorting direction ('asc' or 'desc').
+     *
+     * @var string
+     */
     public $sortDirection = 'asc';
+
+    /**
+     * Start date for publication date filtering.
+     *
+     * @var string|null (date in Y-m-d format)
+     */
     public $filterPublicationDateFrom = null;
+
+    /**
+     * End date for publication date filtering.
+     *
+     * @var string|null (date in Y-m-d format)
+     */
     public $filterPublicationDateTo = null;
 
+    /**
+     * Events this component listens for.
+     *
+     * @var array
+     */
     protected $listeners = ['bookDeleted' => 'loadBooks', 'bookUpdated' => 'loadBooks', 'bookAdded' => 'loadBooks'];
 
+    /**
+     * Validation rules for the book form.
+     *
+     * @var array
+     */
     protected $rules = [
         'book.title' => 'required|string|max:255',
         'book.author' => 'required|string|max:255',
@@ -39,6 +149,11 @@ class Books extends Component
         'book.number_of_copies' => 'required|integer',
     ];
 
+    /**
+     * Custom validation error messages.
+     *
+     * @var array
+     */
     protected $messages = [
         'book.title.required' => 'The title field is required.',
         'book.title.string' => 'The title must be a string.',
@@ -63,11 +178,19 @@ class Books extends Component
         'book.number_of_copies.integer' => 'The number of copies must be an integer.',
     ];
 
+    /**
+     * Mount the component and load the initial book list.
+     */
     public function mount(): void
     {
         $this->loadBooks();
     }
 
+    /**
+     * Sort the book list by the specified column.
+     *
+     * @param string $column The column to sort by
+     */
     public function sortBy($column): void
     {
         if ($this->sortBy === $column) {
@@ -79,6 +202,10 @@ class Books extends Component
 
         $this->loadBooks();
     }
+
+    /**
+     * Reset all search and filter inputs.
+     */
     public function resetFilters(): void
     {
         $this->reset([
@@ -94,37 +221,46 @@ class Books extends Component
 
         $this->loadBooks();
     }
+
+    /**
+     * Load the book list from the database, applying sorting and filtering.
+     */
     public function loadBooks(): void
     {
-        $this->books = Book::query()
-            ->when($this->searchTitle, function ($query, $searchTitle) {
+        $query = Book::query()
+            ->when($this->searchTitle, callback: function ($query, $searchTitle) {
                 $query->where('title', 'like', '%' . $searchTitle . '%');
             })
-            ->when($this->searchAuthor, function ($query, $searchAuthor) {
+            ->when($this->searchAuthor, callback: function ($query, $searchAuthor) {
                 $query->where('author', 'like', '%' . $searchAuthor . '%');
             })
-            ->when($this->searchIsbn, function ($query, $searchIsbn) {
+            ->when($this->searchIsbn, callback: function ($query, $searchIsbn) {
                 $query->where('isbn', 'like', '%' . $searchIsbn . '%');
             })
-            ->when($this->filterGenre, function ($query, $filterGenre) {
+            ->when($this->filterGenre, callback: function ($query, $filterGenre) {
                 $query->where('genre', $filterGenre);
             })
-            ->when($this->filterCopiesFrom, function ($query, $filterCopiesFrom) {
+            ->when($this->filterCopiesFrom, callback: function ($query, $filterCopiesFrom) {
                 $query->where('number_of_copies', '>=', $filterCopiesFrom);
             })
-            ->when($this->filterCopiesTo, function ($query, $filterCopiesTo) {
+            ->when($this->filterCopiesTo, callback: function ($query, $filterCopiesTo) {
                 $query->where('number_of_copies', '<=', $filterCopiesTo);
             })
-            ->when($this->filterPublicationDateFrom, function ($query, $date) {
+            ->when($this->filterPublicationDateFrom, callback: function ($query, $date) {
                 $query->where('publication_date', '>=', $date);
             })
-            ->when($this->filterPublicationDateTo, function ($query, $date) {
+            ->when($this->filterPublicationDateTo, callback: function ($query, $date) {
                 $query->where('publication_date', '<=', $date);
-            })
-            ->orderBy($this->sortBy, $this->sortDirection)
+            });
+
+        $this->books = $query->orderBy($this->sortBy, $this->sortDirection)
             ->get();
+
     }
 
+    /**
+     * Show the form for creating a new book.
+     */
     public function create(): void
     {
         $this->resetAll();
@@ -132,6 +268,9 @@ class Books extends Component
         $this->showForm = true;
     }
 
+    /**
+     * Store a new book in the database.
+     */
     public function store(): void
     {
         $this->validate();
@@ -149,6 +288,11 @@ class Books extends Component
         }
     }
 
+    /**
+     * Show the form for editing an existing book.
+     *
+     * @param Book $book The book to edit
+     */
     public function edit(Book $book): void
     {
         $this->resetAll();
@@ -157,6 +301,9 @@ class Books extends Component
         $this->showForm = true;
     }
 
+    /**
+     * Update an existing book in the database.
+     */
     public function update(): void
     {
         $this->validate();
@@ -174,6 +321,11 @@ class Books extends Component
         }
     }
 
+    /**
+     * Delete a book from the database.
+     *
+     * @param Book $book The book to delete
+     */
     public function delete(Book $book): void
     {
         try {
@@ -187,24 +339,41 @@ class Books extends Component
         }
     }
 
+    /**
+     * Reset all form data, error messages, and success messages.
+     */
     public function resetAll(): void
     {
         $this->resetErrorBag();
         $this->reset(['book', 'editMode', 'successMessage', 'errorMessages']);
     }
 
+    /**
+     * Cancel the form and return to the book list.
+     */
     public function cancel(): void
     {
         $this->resetAll();
         $this->showForm = false;
     }
 
-    private function handleError($action, $exception)
+    /**
+     * Handle errors that occur during book operations.
+     *
+     * @param string $action The action that triggered the error (e.g., 'adding', 'updating', 'deleting')
+     * @param \Exception $exception The exception object
+     */
+    private function handleError($action, $exception): void
     {
         $this->errorMessages[] = 'Error ' . $action . ' book.';
         Log::error('Error ' . $action . ' book:', ['exception' => $exception]);
     }
 
+    /**
+     * Render the component's view.
+     *
+     * @return \Illuminate\View\View
+     */
     public function render()
     {
         // Fetch genres with book counts
