@@ -3,14 +3,22 @@
 namespace App\Http\Livewire\Auth;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 
 class Register extends Component
 {
+    /** @var string */
     public $name = '';
+
+    /** @var string */
     public $email = '';
+
+    /** @var string */
     public $password = '';
+
+    /** @var string */
     public $password_confirmation = '';
 
     protected $rules = [
@@ -19,6 +27,11 @@ class Register extends Component
         'password' => 'required|string|min:8|confirmed',
     ];
 
+    /**
+     * Register a new user.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function register()
     {
         $this->validate();
@@ -36,6 +49,6 @@ class Register extends Component
 
     public function render()
     {
-        return view('livewire.register');
+        return view('livewire.auth.register');
     }
 }

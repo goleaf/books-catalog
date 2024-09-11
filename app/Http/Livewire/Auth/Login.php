@@ -24,6 +24,8 @@ class Login extends Component
             return redirect()->intended(route('books.index'));
         } else {
             session()->flash('error', 'Invalid email or password.');
+
+            $this->addError('email', 'The provided credentials do not match our records.');
         }
     }
 
