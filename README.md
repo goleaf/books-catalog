@@ -30,6 +30,40 @@ It provides a seamless interface for performing CRUD (Create, Read, Update, Dele
     * Uses Font Awesome icons for visual clarity.
     * Maintains a consistent and visually appealing design.
 
+## Features
+
+### Core Features
+
+* **View Book List:** `true`
+* **Add New Book:** `true`
+* **Edit Book:** `true`
+* **Delete Book:** `true`
+* **Real-time Updates:** `true`
+* **Custom Validation Messages:** `true`
+* **Error Handling:** `true`
+* **Flash Messages:** `true`
+* **Sorting:** `true`
+* **Searching:** `true`
+* **Filtering:** `true`
+
+### Additional Features
+
+* **User Authentication:** `true`
+* **Authorization (Admin vs Regular User):** `true`
+* **Author Management:** `true`
+* **Genre Management:** `true`
+* **User Management:** `true` (limited to admin users)
+
+### Potential Future Enhancements
+
+* **Book Borrowing and Returns:** `false`
+* **Book Availability Status:** `false`
+* **Book Cover Images:** `false`
+* **Reporting and Analytics:** `false`
+* **Notifications:** `false`
+* **Book Recommendations:** `false`
+* **API Integration:** `false`
+
 ## Tech Stack
 
 **Backend**
