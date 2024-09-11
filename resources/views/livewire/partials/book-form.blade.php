@@ -15,9 +15,9 @@
                     </div>
 
                     <div class="mb-3">
-                        {!! Form::label('author', __('Author'), ['class' => 'form-label']) !!}
-                        {!! Form::text('author', null, ['class' => 'form-control' . ($errors->has('book.author') ? ' is-invalid' : ''), 'wire:model.defer' => 'book.author', 'required']) !!}
-                        @error('book.author') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        {!! Form::label('author_id', __('Author'), ['class' => 'form-label']) !!}
+                        {!! Form::select('author_id', $authors, null, ['class' => 'form-select' . ($errors->has('book.author_id') ? ' is-invalid' : ''), 'wire:model.defer' => 'book.author_id', 'required']) !!}
+                        @error('book.author_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="mb-3">
@@ -33,9 +33,9 @@
                     </div>
 
                     <div class="mb-3">
-                        {!! Form::label('genre', __('Genre'), ['class' => 'form-label']) !!}
-                        {!! Form::text('genre', null, ['class' => 'form-control' . ($errors->has('book.genre') ? ' is-invalid' : ''), 'wire:model.defer' => 'book.genre', 'required']) !!}
-                        @error('book.genre') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        {!! Form::label('genre_id', __('Genre'), ['class' => 'form-label']) !!}
+                        {!! Form::select('genre_id', $genres, null, ['class' => 'form-select' . ($errors->has('book.genre_id') ? ' is-invalid' : ''), 'wire:model.defer' => 'book.genre_id', 'required']) !!}
+                        @error('book.genre_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="mb-3">

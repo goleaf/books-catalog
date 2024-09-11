@@ -10,7 +10,23 @@ class Book extends Model
     use HasFactory;
 
     protected $table = 'books';
+
     protected $fillable = [
-        'title', 'author', 'isbn', 'publication_date', 'genre', 'number_of_copies'
+        'title', 'isbn', 'publication_date', 'number_of_copies'
     ];
+
+    // Define the many-to-many relationship with Author through the pivot table
+    public function authors()
+    {
+        return $this->belongsToMany(Author::class, 'author_book_rel')
+            ->using(AuthorBookRel::class);
+    }
+
+    // Define the many-to-many relationship with Genre through the pivot table
+    public function genres()
+    {
+        return $this->belongsToMany(Genre::class, 'book_genre_rel')
+            ->using(BookGenreRel::class);
+    }
+
 }

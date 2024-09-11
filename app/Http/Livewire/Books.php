@@ -2,6 +2,8 @@
 
 namespace App\Http\Livewire;
 
+use App\Models\Author;
+use App\Models\Genre;
 use Livewire\Component;
 use App\Models\Book;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +21,7 @@ class Books extends Component
      *
      * @var \Illuminate\Database\Eloquent\Collection
      */
-    public array|\Illuminate\Database\Eloquent\Collection $books = [];
+    public $books = [];
 
     /**
      * The current book being edited or added.
@@ -142,11 +144,19 @@ class Books extends Component
      */
     protected $rules = [
         'book.title' => 'required|string|max:255',
-        'book.author' => 'required|string|max:255',
+        'book.author_id' => 'required|exists:authors,id',
         'book.isbn' => 'required|string|max:13',
         'book.publication_date' => 'required|date',
-        'book.genre' => 'required|string|max:255',
+        'book.genre_id' => 'required|exists:genres,id',
         'book.number_of_copies' => 'required|integer',
+        'searchTitle' => 'nullable|string|max:255',
+        'searchAuthor' => 'nullable|string|max:255',
+        'searchIsbn' => 'nullable|string|max:13',
+        'filterGenre' => 'nullable|string|max:255',
+        'filterCopiesFrom' => 'nullable|integer|min:0',
+        'filterCopiesTo' => 'nullable|integer|min:0',
+        'filterPublicationDateFrom' => 'nullable|date',
+        'filterPublicationDateTo' => 'nullable|date',
     ];
 
     /**
@@ -159,9 +169,8 @@ class Books extends Component
         'book.title.string' => 'The title must be a string.',
         'book.title.max' => 'The title may not be greater than 255 characters.',
 
-        'book.author.required' => 'The author field is required.',
-        'book.author.string' => 'The author must be a string.',
-        'book.author.max' => 'The author may not be greater than 255 characters.',
+        'book.author_id.required' => 'The author field is required.',
+        'book.author_id.exists' => 'Invalid author selected.',
 
         'book.isbn.required' => 'The ISBN field is required.',
         'book.isbn.string' => 'The ISBN must be a string.',
@@ -170,12 +179,32 @@ class Books extends Component
         'book.publication_date.required' => 'The publication date field is required.',
         'book.publication_date.date' => 'The publication date must be a valid date.',
 
-        'book.genre.required' => 'The genre field is required.',
-        'book.genre.string' => 'The genre must be a string.',
-        'book.genre.max' => 'The genre may not be greater than 255 characters.',
+        'book.genre_id.required' => 'The genre field is required.',
+        'book.genre_id.exists' => 'Invalid genre selected.',
 
         'book.number_of_copies.required' => 'The number of copies field is required.',
         'book.number_of_copies.integer' => 'The number of copies must be an integer.',
+
+        'searchTitle.string' => 'The title search term must be text.',
+        'searchTitle.max' => 'The title search term may not be greater than 255 characters.',
+
+        'searchAuthor.string' => 'The author search term must be text.',
+        'searchAuthor.max' => 'The author search term may not be greater than 255 characters.',
+
+        'searchIsbn.string' => 'The ISBN search term must be text.',
+        'searchIsbn.max' => 'The ISBN search term may not be greater than 13 characters.',
+
+        'filterGenre.string' => 'The genre filter must be text.',
+        'filterGenre.max' => 'The genre filter may not be greater than 255 characters.',
+
+        'filterCopiesFrom.integer' => 'The "Copies from" value must be a whole number.',
+        'filterCopiesFrom.min' => 'The "Copies from" value must be at least 0.',
+
+        'filterCopiesTo.integer' => 'The "Copies to" value must be a whole number.',
+        'filterCopiesTo.min' => 'The "Copies to" value must be at least 0.',
+
+        'filterPublicationDateFrom.date' => 'The "Publication date from" must be a valid date.',
+        'filterPublicationDateTo.date' => 'The "Publication date to" must be a valid date.',
     ];
 
     /**
@@ -227,36 +256,42 @@ class Books extends Component
      */
     public function loadBooks(): void
     {
-        $query = Book::query()
-            ->when($this->searchTitle, callback: function ($query, $searchTitle) {
+        $query = Book::with('authors', 'genres')
+            ->when($this->searchTitle, callback: function ($query, $searchTitle): void {
                 $query->where('title', 'like', '%' . $searchTitle . '%');
             })
-            ->when($this->searchAuthor, callback: function ($query, $searchAuthor) {
-                $query->where('author', 'like', '%' . $searchAuthor . '%');
+            ->when($this->searchAuthor, callback: function ($query, $searchAuthor): void {
+                $query->whereHas('authors', function ($query) use ($searchAuthor) {
+                    $query->where('name', 'like', '%' . $searchAuthor . '%');
+                });
             })
-            ->when($this->searchIsbn, callback: function ($query, $searchIsbn) {
+            ->when($this->searchIsbn, callback: function ($query, $searchIsbn): void {
                 $query->where('isbn', 'like', '%' . $searchIsbn . '%');
             })
-            ->when($this->filterGenre, callback: function ($query, $filterGenre) {
-                $query->where('genre', $filterGenre);
+            ->when($this->filterGenre, callback: function ($query, $filterGenre): void {
+                $query->whereHas('genres', function ($query) use ($filterGenre) {
+                    $query->where('name', $filterGenre);
+                });
             })
-            ->when($this->filterCopiesFrom, callback: function ($query, $filterCopiesFrom) {
+            ->when($this->filterCopiesFrom, callback: function ($query, $filterCopiesFrom): void {
                 $query->where('number_of_copies', '>=', $filterCopiesFrom);
             })
-            ->when($this->filterCopiesTo, callback: function ($query, $filterCopiesTo) {
+            ->when($this->filterCopiesTo, callback: function ($query, $filterCopiesTo): void {
                 $query->where('number_of_copies', '<=', $filterCopiesTo);
             })
-            ->when($this->filterPublicationDateFrom, callback: function ($query, $date) {
+            ->when($this->filterPublicationDateFrom, callback: function ($query, $date): void {
                 $query->where('publication_date', '>=', $date);
             })
-            ->when($this->filterPublicationDateTo, callback: function ($query, $date) {
+            ->when($this->filterPublicationDateTo, callback: function ($query, $date): void {
                 $query->where('publication_date', '<=', $date);
             });
 
         $this->books = $query->orderBy($this->sortBy, $this->sortDirection)
             ->get();
 
+        $this->reset('successMessage');
     }
+
 
     /**
      * Show the form for creating a new book.
@@ -277,7 +312,9 @@ class Books extends Component
         $this->validate(['book.isbn' => 'unique:books']);
 
         try {
-            Book::create($this->book);
+            $book = Book::create($this->book);
+            $book->authors()->attach($this->selectedAuthors);
+            $book->genres()->attach($this->selectedGenres);
             $this->successMessage = 'Book added successfully!';
         } catch (\Exception $e) {
             $this->handleError('adding', $e);
@@ -299,6 +336,9 @@ class Books extends Component
         $this->book = $book->toArray();
         $this->editMode = true;
         $this->showForm = true;
+
+        $this->selectedAuthors = $book->authors->pluck('id')->toArray();
+        $this->selectedGenres = $book->genres->pluck('id')->toArray();
     }
 
     /**
@@ -311,6 +351,10 @@ class Books extends Component
         try {
             $book = Book::find($this->book['id']);
             $book->update($this->book);
+
+            $book->authors()->sync($this->selectedAuthors);
+            $book->genres()->sync($this->selectedGenres);
+
             $this->successMessage = 'Book updated successfully!';
         } catch (\Exception $e) {
             $this->handleError('updating', $e);
@@ -345,7 +389,7 @@ class Books extends Component
     public function resetAll(): void
     {
         $this->resetErrorBag();
-        $this->reset(['book', 'editMode', 'successMessage', 'errorMessages']);
+        $this->reset(['book', 'editMode', 'successMessage', 'errorMessages', 'selectedAuthors', 'selectedGenres']);
     }
 
     /**
@@ -376,21 +420,16 @@ class Books extends Component
      */
     public function render()
     {
-        // Fetch genres with book counts
-        $genresWithCounts = Book::query()
-            ->select('genre')
-            ->selectRaw('COUNT(*) as count')
-            ->groupBy('genre')
-            ->orderBy('genre')
-            ->get();
+        $genresWithCounts = Genre::withCount('books')->get();
 
         $genres = [];
-        foreach ($genresWithCounts as $genreWithCount) {
-            $genres[$genreWithCount->genre] = $genreWithCount->genre . ' (' . $genreWithCount->count . ' books)';
+        foreach ($genresWithCounts as $genre) {
+            $genres[$genre->id] = $genre->name . ' (' . $genre->books_count . ' books)';
         }
 
         return view('livewire.books', [
             'genres' => $genres,
+            'authors' => Author::pluck('name', 'id'),
             'sortBy' => $this->sortBy,
             'sortDirection' => $this->sortDirection,
         ]);
