@@ -13,6 +13,11 @@
         @error('password') <span class="invalid-feedback">{{ $message }}</span> @enderror
     </div>
 
+    <div class="mb-3 form-check">
+        {!! Form::checkbox('remember', 1, null, ['class' => 'form-check-input', 'id' => 'remember', 'wire:model' => 'remember']) !!}
+        {!! Form::label('remember', 'Remember Me', ['class' => 'form-check-label']) !!}
+    </div>
+
     {!! Form::submit('Login', ['class' => 'btn btn-primary']) !!}
 
     {!! Form::close() !!}

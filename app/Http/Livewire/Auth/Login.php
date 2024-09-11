@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire;
+namespace App\Http\Livewire\Auth;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
@@ -9,6 +9,7 @@ class Login extends Component
 {
     public $email = '';
     public $password = '';
+    public $remember = false;
 
     protected $rules = [
         'email' => 'required|email',
@@ -19,8 +20,8 @@ class Login extends Component
     {
         $this->validate();
 
-        if (Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
-            return redirect()->intended('/books');
+        if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+            return redirect()->intended(route('books.index'));
         } else {
             session()->flash('error', 'Invalid email or password.');
         }
@@ -28,6 +29,6 @@ class Login extends Component
 
     public function render()
     {
-        return view('livewire.login');
+        return view('livewire.auth.login');
     }
 }

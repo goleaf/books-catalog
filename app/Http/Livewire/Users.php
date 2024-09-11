@@ -62,6 +62,7 @@ class Users extends Component
 
     public function create(): void
     {
+        $this->authorize('manage-users');
         $this->resetAll();
         $this->editMode = false;
         $this->showForm = true;
