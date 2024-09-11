@@ -13,8 +13,22 @@ class Books extends Component
     public $book;
     public $showForm = false;
     public $editMode = false;
+    public $successMessage = '';
+    public $errorMessages = [];
 
-    protected $listeners = ['bookDeleted' => 'loadBooks'];
+    // Search and filter properties
+    public $searchTitle = '';
+    public $searchAuthor = '';
+    public $searchIsbn = '';
+    public $filterGenre = '';
+    public $filterCopiesFrom = null;
+    public $filterCopiesTo = null;
+    public $sortBy = 'title';
+    public $sortDirection = 'asc';
+    public $filterPublicationDateFrom = null;
+    public $filterPublicationDateTo = null;
+
+    protected $listeners = ['bookDeleted' => 'loadBooks', 'bookUpdated' => 'loadBooks', 'bookAdded' => 'loadBooks'];
 
     protected $rules = [
         'book.title' => 'required|string|max:255',
@@ -54,39 +68,90 @@ class Books extends Component
         $this->loadBooks();
     }
 
+    public function sortBy($column): void
+    {
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortBy = $column;
+            $this->sortDirection = 'asc';
+        }
+
+        $this->loadBooks();
+    }
+    public function resetFilters(): void
+    {
+        $this->reset([
+            'searchTitle',
+            'searchAuthor',
+            'searchIsbn',
+            'filterGenre',
+            'filterCopiesFrom',
+            'filterCopiesTo',
+            'filterPublicationDateFrom',
+            'filterPublicationDateTo'
+        ]);
+
+        $this->loadBooks();
+    }
     public function loadBooks(): void
     {
-        $this->books = Book::all();
+        $this->books = Book::query()
+            ->when($this->searchTitle, function ($query, $searchTitle) {
+                $query->where('title', 'like', '%' . $searchTitle . '%');
+            })
+            ->when($this->searchAuthor, function ($query, $searchAuthor) {
+                $query->where('author', 'like', '%' . $searchAuthor . '%');
+            })
+            ->when($this->searchIsbn, function ($query, $searchIsbn) {
+                $query->where('isbn', 'like', '%' . $searchIsbn . '%');
+            })
+            ->when($this->filterGenre, function ($query, $filterGenre) {
+                $query->where('genre', $filterGenre);
+            })
+            ->when($this->filterCopiesFrom, function ($query, $filterCopiesFrom) {
+                $query->where('number_of_copies', '>=', $filterCopiesFrom);
+            })
+            ->when($this->filterCopiesTo, function ($query, $filterCopiesTo) {
+                $query->where('number_of_copies', '<=', $filterCopiesTo);
+            })
+            ->when($this->filterPublicationDateFrom, function ($query, $date) {
+                $query->where('publication_date', '>=', $date);
+            })
+            ->when($this->filterPublicationDateTo, function ($query, $date) {
+                $query->where('publication_date', '<=', $date);
+            })
+            ->orderBy($this->sortBy, $this->sortDirection)
+            ->get();
     }
 
     public function create(): void
     {
-        $this->reset('book');
+        $this->resetAll();
         $this->editMode = false;
         $this->showForm = true;
     }
 
-
     public function store(): void
     {
         $this->validate();
-        $this->validate(['books.isbn' => 'unique:books']);
+        $this->validate(['book.isbn' => 'unique:books']);
 
         try {
             Book::create($this->book);
-            session()->flash('success', 'Book added successfully!');
+            $this->successMessage = 'Book added successfully!';
         } catch (\Exception $e) {
-            session()->flash('error', 'Error adding book.');
-            Log::error('Error adding book:', ['exception' => $e]);
+            $this->handleError('adding', $e);
         } finally {
             $this->showForm = false;
             $this->loadBooks();
-            session()->forget('error');
+            $this->resetErrorBag();
         }
     }
 
     public function edit(Book $book): void
     {
+        $this->resetAll();
         $this->book = $book->toArray();
         $this->editMode = true;
         $this->showForm = true;
@@ -96,24 +161,16 @@ class Books extends Component
     {
         $this->validate();
 
-        $this->validate([
-            'books.isbn' => Rule::unique('books')->ignore($this->book['id']),
-        ]);
-
         try {
             $book = Book::find($this->book['id']);
             $book->update($this->book);
-        } catch (\Illuminate\Database\QueryException $e) {
-            session()->flash('error', 'Database error: ' . $e->getMessage());
-            Log::error('Error updating book:', ['exception' => $e]);
+            $this->successMessage = 'Book updated successfully!';
         } catch (\Exception $e) {
-            session()->flash('error', 'An error occurred while updating the book.');
-            Log::error('Error updating book:', ['exception' => $e]);
+            $this->handleError('updating', $e);
         } finally {
             $this->showForm = false;
             $this->loadBooks();
-            session()->flash('success', 'Book updated successfully!');
-            session()->forget('error');
+            $this->resetErrorBag();
         }
     }
 
@@ -122,22 +179,51 @@ class Books extends Component
         try {
             $book->delete();
             $this->emit('bookDeleted');
-            session()->flash('success', 'Book deleted successfully!');
+            $this->successMessage = 'Book deleted successfully!';
         } catch (\Exception $e) {
-            session()->flash('error', 'Error deleting book: ' . $e->getMessage());
+            $this->handleError('deleting', $e);
         } finally {
             $this->loadBooks();
         }
     }
 
+    public function resetAll(): void
+    {
+        $this->resetErrorBag();
+        $this->reset(['book', 'editMode', 'successMessage', 'errorMessages']);
+    }
+
     public function cancel(): void
     {
-        $this->reset(['book', 'editMode']);
+        $this->resetAll();
         $this->showForm = false;
+    }
+
+    private function handleError($action, $exception)
+    {
+        $this->errorMessages[] = 'Error ' . $action . ' book.';
+        Log::error('Error ' . $action . ' book:', ['exception' => $exception]);
     }
 
     public function render()
     {
-        return view('livewire.books');
+        // Fetch genres with book counts
+        $genresWithCounts = Book::query()
+            ->select('genre')
+            ->selectRaw('COUNT(*) as count')
+            ->groupBy('genre')
+            ->orderBy('genre')
+            ->get();
+
+        $genres = [];
+        foreach ($genresWithCounts as $genreWithCount) {
+            $genres[$genreWithCount->genre] = $genreWithCount->genre . ' (' . $genreWithCount->count . ' books)';
+        }
+
+        return view('livewire.books', [
+            'genres' => $genres,
+            'sortBy' => $this->sortBy,
+            'sortDirection' => $this->sortDirection,
+        ]);
     }
 }

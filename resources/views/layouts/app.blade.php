@@ -9,11 +9,27 @@
     @livewireStyles
 </head>
 <body>
-<div id="app">
-    <main role="main" class="container mt-4">
-        @yield('content')
-    </main>
-</div>
+
+    <div id="app">
+
+                <div class="container mt-4">
+                    <div class="row justify-content-center">
+                        <div class="col-9">
+                            <div class="alert alert-danger fade show text-center mt-4" role="alert">
+                                <strong>System is under development now</strong>
+                                <br> The developer is currently actively working on this system.
+                                <br> You may experience some errors or unexpected behavior.
+                                <br> When this message is no longer displayed, the developer has completed the tasks and is attending to other matters.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+        <main role="main" class="container-fluid mt-4">
+            @yield('content')
+        </main>
+    </div>
 
 @livewireScripts
 
