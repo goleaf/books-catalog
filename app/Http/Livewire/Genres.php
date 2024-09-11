@@ -4,6 +4,7 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use App\Models\Genre;
+use Illuminate\Support\Facades\Log;
 
 class Genres extends Component
 {
@@ -13,6 +14,8 @@ class Genres extends Component
     public $editMode = false;
     public $successMessage = '';
     public $errorMessages = [];
+
+    protected $listeners = ['genreDeleted' => 'loadGenres'];
 
     protected $rules = [
         'genre.name' => 'required|string|max:255|unique:genres,name',
@@ -25,23 +28,35 @@ class Genres extends Component
         'genre.name.unique' => 'This genre already exists.',
     ];
 
-    public function mount()
+    /**
+     * Mount the component and load the initial list of genres
+     */
+    public function mount(): void
     {
         $this->loadGenres();
     }
 
-    public function loadGenres()
+    /**
+     * Load the genres from the database
+     */
+    public function loadGenres(): void
     {
         $this->genres = Genre::all();
     }
 
-    public function create()
+    /**
+     * Show the form for creating a new genre
+     */
+    public function create(): void
     {
         $this->reset(['genre', 'editMode']);
         $this->showForm = true;
     }
 
-    public function store()
+    /**
+     * Store a new genre in the database
+     */
+    public function store(): void
     {
         $this->validate();
 
@@ -51,42 +66,54 @@ class Genres extends Component
         } catch (\Exception $e) {
             $this->handleError('adding', $e);
         } finally {
-            $this->showForm = false;
-            $this->loadGenres();
-            $this->resetErrorBag();
+            $this->resetFormAndLoadGenres();
         }
     }
 
-    public function edit(Genre $genre)
+    /**
+     * Show the form for editing an existing genre
+     *
+     * @param Genre $genre The genre to edit
+     */
+    public function edit(Genre $genre): void
     {
-        $this->resetAll();
         $this->genre = $genre->toArray();
         $this->editMode = true;
         $this->showForm = true;
     }
 
-    public function update()
+    /**
+     * Update an existing genre in the database
+     */
+    public function update(): void
     {
         $this->validate();
 
         try {
-            $genre = Genre::find($this->genre['id']);
+            $genre = Genre::findOrFail($this->genre['id']);
             $genre->update($this->genre);
             $this->successMessage = 'Genre updated successfully!';
         } catch (\Exception $e) {
             $this->handleError('updating', $e);
         } finally {
-            $this->showForm = false;
-            $this->loadGenres();
-            $this->resetErrorBag();
+            $this->resetFormAndLoadGenres();
         }
     }
 
-    public function delete(Genre $genre)
+    /**
+     * Delete a genre from the database
+     *
+     * @param Genre $genre The genre to delete
+     */
+    public function delete(Genre $genre): void
     {
         try {
-            $genre->delete();
-            $this->successMessage = 'Genre deleted successfully!';
+            if ($genre->books()->count() > 0) {
+                $this->errorMessages[] = 'Cannot delete genre with associated books.';
+            } else {
+                $genre->delete();
+                $this->successMessage = 'Genre deleted successfully!';
+            }
         } catch (\Exception $e) {
             $this->handleError('deleting', $e);
         } finally {
@@ -94,26 +121,30 @@ class Genres extends Component
         }
     }
 
-    public function resetAll()
-    {
-        $this->resetErrorBag();
-        $this->reset(['genre', 'editMode', 'successMessage', 'errorMessages']);
-    }
-
-    public function cancel()
-    {
-        $this->resetAll();
-        $this->showForm = false;
-    }
-
-    private function handleError($action, $exception)
+    /**
+     * Handle errors that occur during genre operations
+     *
+     * @param string $action The action that triggered the error (e.g., 'adding', 'updating', 'deleting')
+     * @param \Exception $exception The exception object
+     */
+    private function handleError($action, $exception): void
     {
         $this->errorMessages[] = 'Error ' . $action . ' genre.';
         Log::error('Error ' . $action . ' genre:', ['exception' => $exception]);
     }
 
+    /**
+     * Reset the form, hide it and reload genres
+     */
+    private function resetFormAndLoadGenres(): void
+    {
+        $this->reset(['genre', 'editMode', 'errorMessages']);
+        $this->showForm = false;
+        $this->loadGenres();
+    }
+
     public function render()
     {
-        return view('livewire.genres');
+        return view('livewire.genres.index');
     }
 }
