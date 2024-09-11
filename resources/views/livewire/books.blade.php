@@ -11,15 +11,15 @@
                 @endif
             </div>
             <div class="card-body">
+
                 @include('livewire.partials.flash-messages')
 
                 @if ($showForm)
                     @include('livewire.partials.book-form')
                 @else
-
                     @include('livewire.partials.book-list')
-
                 @endif
+
             </div>
         </div>
     </div>
