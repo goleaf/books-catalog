@@ -65,7 +65,7 @@
         </div>
     </nav>
 
-    <main role="main" class="container mt-4">
+    <main role="main" class="container-fluid mt-4">
 
         @if (session()->has('message'))
             <div class="row justify-content-center text-center mt-3">

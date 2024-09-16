@@ -53,7 +53,6 @@
             </th>
             <th class="table-header" wire:click="sortBy('author')">
                 Author
-                @include('livewire.partials.sort-icon', ['field' => 'author'])
             </th>
             <th class="table-header" wire:click="sortBy('isbn')">
                 ISBN
@@ -65,7 +64,6 @@
             </th>
             <th class="table-header" wire:click="sortBy('genre')">
                 Genre
-                @include('livewire.partials.sort-icon', ['field' => 'genre'])
             </th>
             <th class="table-header" wire:click="sortBy('number_of_copies')">
                 Number of copies
@@ -78,10 +76,18 @@
         @foreach ($books as $book)
             <tr>
                 <td>{{ $book->title }}</td>
-                <td>{{ $book->author }}</td>
+                <td>
+                    @foreach ($book->authors as $index => $author)
+                        {{ $author->name }}@if ($index < $book->authors->count() - 1),<br>@endif
+                    @endforeach
+                </td>
                 <td>{{ $book->isbn }}</td>
                 <td>{{ $book->publication_date }}</td>
-                <td>{{ $book->genre }}</td>
+                <td>
+                    @foreach ($book->genres as $index => $genre)
+                        {{ $genre->name }}@if ($index < $book->genres->count() - 1),<br>@endif
+                    @endforeach
+                </td>
                 <td>{{ $book->number_of_copies }}</td>
                 <td class="text-end">
                     <div class="btn-group" role="group">

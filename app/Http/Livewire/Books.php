@@ -129,6 +129,10 @@ class Books extends Component
      */
     public $filterPublicationDateTo = null;
 
+    public array $selectedAuthors = [];
+    public array $selectedGenres = [];
+
+
     /**
      * Events this component listens for.
      *
@@ -141,12 +145,13 @@ class Books extends Component
      *
      * @var array
      */
-    protected $rules = [
+    protected array $rules = [
         'book.title' => 'required|string|max:255',
-        'book.author_id' => 'required|exists:authors,id',
+        'selectedAuthors' => 'required|array',
+        'selectedAuthors.*' => 'exists:authors,id',
         'book.isbn' => 'required|string|max:13',
         'book.publication_date' => 'required|date',
-        'book.genre_id' => 'required|exists:genres,id',
+        'selectedGenres.*' => 'exists:genres,id',
         'book.number_of_copies' => 'required|integer',
         'searchTitle' => 'nullable|string|max:255',
         'searchAuthor' => 'nullable|string|max:255',
@@ -163,7 +168,7 @@ class Books extends Component
      *
      * @var array
      */
-    protected $messages = [
+    protected array $messages = [
         'book.title.required' => 'The title field is required.',
         'book.title.string' => 'The title must be a string.',
         'book.title.max' => 'The title may not be greater than 255 characters.',
@@ -221,7 +226,7 @@ class Books extends Component
      *
      * @param string $column The column to sort by
      */
-    public function sortBy($column): void
+    public function sortBy(string $column): void
     {
         if ($this->sortBy === $column) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -229,25 +234,6 @@ class Books extends Component
             $this->sortBy = $column;
             $this->sortDirection = 'asc';
         }
-
-        $this->loadBooks();
-    }
-
-    /**
-     * Reset all search and filter inputs.
-     */
-    public function resetFilters(): void
-    {
-        $this->reset([
-            'searchTitle',
-            'searchAuthor',
-            'searchIsbn',
-            'filterGenre',
-            'filterCopiesFrom',
-            'filterCopiesTo',
-            'filterPublicationDateFrom',
-            'filterPublicationDateTo'
-        ]);
 
         $this->loadBooks();
     }
@@ -298,9 +284,10 @@ class Books extends Component
     public function loadGenres(): void
     {
         $this->genres = Genre::withCount('books')
-        ->get()
+            ->get()
             ->mapWithKeys(function ($genre) {
-                return [$genre->id => $genre->name . ' (' . $genre->books_count . ' books)'];
+                $bookLabel = ($genre->books_count === 1) ? 'book' : 'books';
+                return [$genre->id => $genre->name . ' (' . $genre->books_count . ' ' . $bookLabel . ')'];
             });
     }
 
@@ -320,19 +307,13 @@ class Books extends Component
     public function store(): void
     {
         $this->validate();
-        $this->validate(['book.isbn' => 'unique:books']);
 
         try {
-            $author = Author::firstOrCreate(['name' => $this->book['author']]);
+            $book = Book::create($this->book);
 
-            $genre = Genre::firstOrCreate(['name' => $this->book['genre']]);
-
-            Book::create([
-                'title' => $this->book['title'],
-                'isbn' => $this->book['isbn'],
-                'publication_date' => $this->book['publication_date'],
-                'number_of_copies' => $this->book['number_of_copies'],
-            ]);
+            // Attach selected authors and genres
+            $book->authors()->attach($this->selectedAuthors);
+            $book->genres()->attach($this->selectedGenres);
 
             $this->successMessage = 'Book added successfully!';
         } catch (\Exception $e) {
@@ -355,6 +336,9 @@ class Books extends Component
         $this->book = $book->toArray();
         $this->editMode = true;
         $this->showForm = true;
+
+        $this->selectedAuthors = $book->authors->pluck('id')->toArray();
+        $this->selectedGenres = $book->genres->pluck('id')->toArray();
     }
 
 
@@ -367,17 +351,27 @@ class Books extends Component
 
         try {
             $book = Book::find($this->book['id']);
+
+            // Debug: Dump the original authors and genres before the update
+//            dump('Original Authors:', $book->authors->pluck('name')->toArray());
+//            dump('Original Genres:', $book->genres->pluck('name')->toArray());
+
             $book->update($this->book);
 
+            // Sync authors and genres
             $book->authors()->sync($this->selectedAuthors);
             $book->genres()->sync($this->selectedGenres);
+
+            // Debug: Dump the updated authors and genres after the sync
+//            dump('Updated Authors:', $book->fresh()->authors->pluck('name')->toArray()); // Use fresh() to get the latest data
+//            dump('Updated Genres:', $book->fresh()->genres->pluck('name')->toArray());
 
             $this->successMessage = 'Book updated successfully!';
         } catch (\Exception $e) {
             $this->handleError('updating', $e);
         } finally {
             $this->showForm = false;
-            $this->loadBooksWithFilters(); // Reload with filters after updating
+            $this->loadBooks();
             $this->resetErrorBag();
         }
     }
@@ -409,6 +403,22 @@ class Books extends Component
         $this->reset(['book', 'editMode', 'successMessage', 'errorMessages', 'selectedAuthors', 'selectedGenres']);
     }
 
+    public function resetFilters(): void
+    {
+        $this->reset([
+            'searchTitle',
+            'searchAuthor',
+            'searchIsbn',
+            'filterGenre',
+            'filterCopiesFrom',
+            'filterCopiesTo',
+            'filterPublicationDateFrom',
+            'filterPublicationDateTo'
+        ]);
+
+        $this->loadBooks();
+    }
+
     /**
      * Cancel the form and return to the book list.
      */
@@ -424,10 +434,10 @@ class Books extends Component
      * @param string $action The action that triggered the error (e.g., 'adding', 'updating', 'deleting')
      * @param \Exception $exception The exception object
      */
-    private function handleError(string $action, \Exception $exception): void
+    private function handleError($action, $exception): void
     {
-        $this->errorMessages[] = 'Error ' . $action . ' book.';
-        Log::error('Error ' . $action . ' book:', ['exception' => $exception]);
+        dump('Error ' . $action . ' book:');
+        dump($exception);
     }
 
     /**
@@ -437,7 +447,7 @@ class Books extends Component
      */
     public function render()
     {
-        $genresWithCounts = Genre::withCount('books')->get();
+        $genresWithCounts = Genre::withCount('books')->orderBy('name')->get();
 
         $genres = [];
         foreach ($genresWithCounts as $genre) {
