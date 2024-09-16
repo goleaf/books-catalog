@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Auth;
 
 class Login extends Component
 {
-    public $email = '';
-    public $password = '';
-    public $remember = false;
+    public string $email;
+    public string $password;
+    public bool $remember = false;
+    public array $errorMessages = [];
+
 
     protected $rules = [
         'email' => 'required|email',
@@ -23,10 +25,9 @@ class Login extends Component
         if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             return redirect()->intended(route('books.index'));
         } else {
-            session()->flash('error', 'Invalid email or password.');
-
-            $this->addError('email', 'The provided credentials do not match our records.');
+            $this->errorMessages[] = 'The provided credentials do not match our records.';
         }
+
     }
 
     public function render()

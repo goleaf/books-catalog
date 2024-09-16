@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\demo;
 
-use Illuminate\Database\Seeder;
 use App\Models\Author;
+use Illuminate\Database\Seeder;
 
 class AuthorSeeder extends Seeder
 {

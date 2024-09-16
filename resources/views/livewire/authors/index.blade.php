@@ -9,5 +9,4 @@
         @include('livewire.partials.author-list')
     @endif
 
-    @include('livewire.partials.flash-messages')
 </div>

@@ -83,7 +83,7 @@ class Authors extends Component
     public function delete(Author $author)
     {
         try {
-            if ($author->books()->count() > 0) { // Check if the author has associated books
+            if ($author->books()->count() > 0) {
                 $this->errorMessages[] = 'Cannot delete author with associated books.';
             } else {
                 $author->delete();

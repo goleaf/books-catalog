@@ -11,5 +11,4 @@
         @include('livewire.users.user-list')
     @endif
 
-    @include('livewire.partials.flash-messages')
 </div>

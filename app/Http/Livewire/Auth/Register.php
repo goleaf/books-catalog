@@ -9,42 +9,38 @@ use Livewire\Component;
 
 class Register extends Component
 {
-    /** @var string */
-    public $name = '';
-
-    /** @var string */
-    public $email = '';
-
-    /** @var string */
-    public $password = '';
-
-    /** @var string */
-    public $password_confirmation = '';
+    public string $name = '';
+    public string $email = '';
+    public string $password = '';
+    public string $password_confirmation = '';
 
     protected $rules = [
-        'name' => 'required|string|max:255',
+        'name' => 'required|string|min:3|max:250',
         'email' => 'required|string|email|max:255|unique:users',
         'password' => 'required|string|min:8|confirmed',
     ];
 
-    /**
-     * Register a new user.
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function register()
     {
         $this->validate();
 
-        User::create([
-            'name' => $this->name,
-            'email' => $this->email,
-            'password' => Hash::make($this->password),
-        ]);
+        try {
+            $user = User::create([
+                'name' => $this->name,
+                'email' => $this->email,
+                'password' => Hash::make($this->password),
+            ]);
 
-        session()->flash('success', 'Registration successful! You can now log in.');
+            Auth::login($user);
 
-        return redirect()->route('login');
+            session()->flash('success', 'Registration successful!');
+
+            $this->reset(['name', 'email', 'password', 'password_confirmation']);
+            $this->successMessage = 'Registration successful! You can now use the application.';
+        } catch (\Throwable $e) {
+            $this->addError('registration', 'An error occurred during registration. Please try again.');
+            dump('Error during registration:', ['exception' => $e]);
+        }
     }
 
     public function render()

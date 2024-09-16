@@ -9,5 +9,4 @@
         @include('livewire.genres.genre-list')
     @endif
 
-    @include('livewire.partials.flash-messages')
 </div>

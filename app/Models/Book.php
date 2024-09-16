@@ -15,18 +15,14 @@ class Book extends Model
         'title', 'isbn', 'publication_date', 'number_of_copies'
     ];
 
-    // Define the many-to-many relationship with Author through the pivot table
     public function authors()
     {
-        return $this->belongsToMany(Author::class, 'author_book_rel')
-            ->using(AuthorBookRel::class);
+        return $this->belongsToMany(Author::class, 'author_book_rel');
     }
 
-    // Define the many-to-many relationship with Genre through the pivot table
     public function genres()
     {
-        return $this->belongsToMany(Genre::class, 'book_genre_rel')
-            ->using(BookGenreRel::class);
+        return $this->belongsToMany(Genre::class, 'book_genre_rel');
     }
 
 }

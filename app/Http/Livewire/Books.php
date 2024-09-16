@@ -2,10 +2,10 @@
 
 namespace App\Http\Livewire;
 
-use App\Models\Author;
-use App\Models\Genre;
 use Livewire\Component;
 use App\Models\Book;
+use App\Models\Author;
+use App\Models\Genre;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
@@ -59,7 +59,6 @@ class Books extends Component
      */
     public $errorMessages = [];
 
-    // Search and filter properties
     /**
      * Search term for the title field.
      *
@@ -213,6 +212,8 @@ class Books extends Component
     public function mount(): void
     {
         $this->loadBooks();
+        $this->loadAuthors();
+        $this->loadGenres();
     }
 
     /**
@@ -256,42 +257,52 @@ class Books extends Component
      */
     public function loadBooks(): void
     {
-        $query = Book::with('authors', 'genres')
-            ->when($this->searchTitle, callback: function ($query, $searchTitle): void {
+        $this->books = Book::with('authors', 'genres')
+            ->when($this->searchTitle, function ($query, $searchTitle) {
                 $query->where('title', 'like', '%' . $searchTitle . '%');
             })
-            ->when($this->searchAuthor, callback: function ($query, $searchAuthor): void {
+            ->when($this->searchAuthor, function ($query, $searchAuthor) {
                 $query->whereHas('authors', function ($query) use ($searchAuthor) {
                     $query->where('name', 'like', '%' . $searchAuthor . '%');
                 });
             })
-            ->when($this->searchIsbn, callback: function ($query, $searchIsbn): void {
+            ->when($this->searchIsbn, function ($query, $searchIsbn) {
                 $query->where('isbn', 'like', '%' . $searchIsbn . '%');
             })
-            ->when($this->filterGenre, callback: function ($query, $filterGenre): void {
+            ->when($this->filterGenre, function ($query, $filterGenre) {
                 $query->whereHas('genres', function ($query) use ($filterGenre) {
-                    $query->where('name', $filterGenre);
+                    $query->where('id', $filterGenre);
                 });
             })
-            ->when($this->filterCopiesFrom, callback: function ($query, $filterCopiesFrom): void {
+            ->when($this->filterCopiesFrom, function ($query, $filterCopiesFrom) {
                 $query->where('number_of_copies', '>=', $filterCopiesFrom);
             })
-            ->when($this->filterCopiesTo, callback: function ($query, $filterCopiesTo): void {
+            ->when($this->filterCopiesTo, function ($query, $filterCopiesTo) {
                 $query->where('number_of_copies', '<=', $filterCopiesTo);
             })
-            ->when($this->filterPublicationDateFrom, callback: function ($query, $date): void {
+            ->when($this->filterPublicationDateFrom, function ($query, $date) {
                 $query->where('publication_date', '>=', $date);
             })
-            ->when($this->filterPublicationDateTo, callback: function ($query, $date): void {
+            ->when($this->filterPublicationDateTo, function ($query, $date) {
                 $query->where('publication_date', '<=', $date);
-            });
-
-        $this->books = $query->orderBy($this->sortBy, $this->sortDirection)
+            })
+            ->orderBy($this->sortBy, $this->sortDirection)
             ->get();
-
-        $this->reset('successMessage');
     }
 
+    public function loadAuthors(): void
+    {
+        $this->authors = Author::pluck('name', 'id');
+    }
+
+    public function loadGenres(): void
+    {
+        $this->genres = Genre::withCount('books')
+        ->get()
+            ->mapWithKeys(function ($genre) {
+                return [$genre->id => $genre->name . ' (' . $genre->books_count . ' books)'];
+            });
+    }
 
     /**
      * Show the form for creating a new book.
@@ -312,9 +323,17 @@ class Books extends Component
         $this->validate(['book.isbn' => 'unique:books']);
 
         try {
-            $book = Book::create($this->book);
-            $book->authors()->attach($this->selectedAuthors);
-            $book->genres()->attach($this->selectedGenres);
+            $author = Author::firstOrCreate(['name' => $this->book['author']]);
+
+            $genre = Genre::firstOrCreate(['name' => $this->book['genre']]);
+
+            Book::create([
+                'title' => $this->book['title'],
+                'isbn' => $this->book['isbn'],
+                'publication_date' => $this->book['publication_date'],
+                'number_of_copies' => $this->book['number_of_copies'],
+            ]);
+
             $this->successMessage = 'Book added successfully!';
         } catch (\Exception $e) {
             $this->handleError('adding', $e);
@@ -336,10 +355,8 @@ class Books extends Component
         $this->book = $book->toArray();
         $this->editMode = true;
         $this->showForm = true;
-
-        $this->selectedAuthors = $book->authors->pluck('id')->toArray();
-        $this->selectedGenres = $book->genres->pluck('id')->toArray();
     }
+
 
     /**
      * Update an existing book in the database.
@@ -360,7 +377,7 @@ class Books extends Component
             $this->handleError('updating', $e);
         } finally {
             $this->showForm = false;
-            $this->loadBooks();
+            $this->loadBooksWithFilters(); // Reload with filters after updating
             $this->resetErrorBag();
         }
     }
@@ -407,7 +424,7 @@ class Books extends Component
      * @param string $action The action that triggered the error (e.g., 'adding', 'updating', 'deleting')
      * @param \Exception $exception The exception object
      */
-    private function handleError($action, $exception): void
+    private function handleError(string $action, \Exception $exception): void
     {
         $this->errorMessages[] = 'Error ' . $action . ' book.';
         Log::error('Error ' . $action . ' book:', ['exception' => $exception]);
@@ -427,11 +444,14 @@ class Books extends Component
             $genres[$genre->id] = $genre->name . ' (' . $genre->books_count . ' books)';
         }
 
-        return view('livewire.books', [
+        return view('livewire.books.index', [
             'genres' => $genres,
             'authors' => Author::pluck('name', 'id'),
             'sortBy' => $this->sortBy,
             'sortDirection' => $this->sortDirection,
+            'books' => $this->books,
+            'showForm' => $this->showForm,
         ]);
+
     }
 }

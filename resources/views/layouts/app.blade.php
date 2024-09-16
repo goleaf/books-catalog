@@ -9,21 +9,6 @@
 </head>
 <body>
 
-
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-9">
-            <div class="alert alert-danger fade show text-center mt-4" role="alert">
-                <strong>System is under development now</strong>
-                <br> The developer is currently actively working on this system.
-                <br> You may experience some errors or unexpected behavior.
-                <br> When this message is no longer displayed, the developer has completed the tasks and is attending to other matters.
-            </div>
-        </div>
-    </div>
-</div>
-
-
 <div id="app">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
@@ -65,12 +50,12 @@
                         </li>
                     @else
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}">
+                            <a class="nav-link" href="{{ route('auth.login') }}">
                                 <i class="fas fa-sign-in-alt mr-2"></i> Login
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('register') }}">
+                            <a class="nav-link" href="{{ route('auth.register') }}">
                                 <i class="fas fa-user-plus mr-2"></i> Register
                             </a>
                         </li>
@@ -81,7 +66,19 @@
     </nav>
 
     <main role="main" class="container mt-4">
+
+        @if (session()->has('message'))
+            <div class="row justify-content-center text-center mt-3">
+                <div class="col-md-8">
+                    <div class="alert alert-success" role="alert">
+                        {{ session('message') }}
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @yield('content')
+
     </main>
 </div>
 
