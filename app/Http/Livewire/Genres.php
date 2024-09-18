@@ -163,6 +163,8 @@ class Genres extends Component
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->get();
+
+        $this->emit('genresLoaded');
     }
 
     /**
@@ -250,6 +252,7 @@ class Genres extends Component
             } else {
                 $genre->delete();
                 $this->successMessage = 'Genre deleted successfully!';
+                $this->emit('genreDeleted');
             }
         } catch (\Exception $e) {
             $this->handleError('deleting', $e);

@@ -220,6 +220,27 @@ PASS  Tests\Feature\AuthorsTest
 Tests:    9 passed (19 assertions)
 Duration: 2.70s
 ```
+
+
+### Genres test:
+```
+$ ./vendor/bin/pint tests/Feature/GenresTest.php
+
+PASS  Tests\Feature\GenresTest
+✓ it can render genres component                                                                                                                                                                            1.69s
+✓ it can load genres                                                                                                                                                                                        0.34s
+✓ it can reset filters                                                                                                                                                                                      0.23s
+✓ it can create a new genre                                                                                                                                                                                 0.31s
+✓ it can update an existing genre                                                                                                                                                                           0.31s
+✓ it can delete a genre                                                                                                                                                                                     0.13s
+
+Tests:    6 passed (15 assertions)
+Duration: 3.43s
+
+```
+
+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues.
