@@ -8,52 +8,58 @@
                 <div class="card">
                     <div class="card-header">Login</div>
                     <div class="card-body bg-white">
-                        <form action="{{ route('auth.authenticate') }}" method="post">
-                            @csrf
-                            <div class="mb-3 row">
-                                <label for="email" class="col-md-4 col-form-label text-md-end">Email Address</label>
-                                <div class="col-md-6">
-                                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-                                    @error('email')
+                        {!! Form::open(['route' => 'auth.authenticate', 'method' => 'POST']) !!}
+                        <div class="mb-3 row">
+                            {!! Form::label('email', 'Email Address', ['class' => 'col-md-4 col-form-label text-md-end']) !!}
+                            <div class="col-md-6">
+                                {!! Form::email('email', old('email'), [
+                                    'class' => 'form-control' . ($errors->has('email') ? ' is-invalid' : ''),
+                                    'required',
+                                    'autocomplete' => 'email',
+                                    'autofocus',
+                                ]) !!}
+                                @error('email')
                                     <span class="invalid-feedback" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                                    @enderror
-                                </div>
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
-                            <div class="mb-3 row">
-                                <label for="password" class="col-md-4 col-form-label text-md-end">Password</label>
-                                <div class="col-md-6">
-                                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required autocomplete="current-password">
-                                    @error('password')
+                        </div>
+                        <div class="mb-3 row">
+                            {!! Form::label('password', 'Password', ['class' => 'col-md-4 col-form-label text-md-end']) !!}
+                            <div class="col-md-6">
+                                {!! Form::password('password', [
+                                    'class' => 'form-control' . ($errors->has('password') ? ' is-invalid' : ''),
+                                    'required',
+                                    'autocomplete' => 'current-password',
+                                ]) !!}
+                                @error('password')
                                     <span class="invalid-feedback" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                                    @enderror
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-md-6 offset-md-4">
+                                <div class="form-check">
+                                    {!! Form::checkbox('remember', 1, old('remember') ? true : false, [
+                                        'class' => 'form-check-input',
+                                        'id' => 'remember',
+                                    ]) !!}
+                                    {!! Form::label('remember', 'Remember Me', ['class' => 'form-check-label']) !!}
                                 </div>
                             </div>
-                            <div class="mb-3 row">
-                                <div class="col-md-6 offset-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="remember" id="remember"
-                                            {{ old('remember') ? 'checked' : '' }}>
-
-                                        <label class="form-check-label" for="remember">
-                                            Remember Me
-                                        </label>
-                                    </div>
-                                </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-md-6 offset-md-4">
+                                {!! Form::submit('Login', ['class' => 'btn btn-primary']) !!}
                             </div>
-                            <div class="mb-3 row">
-                                <div class="col-md-6 offset-md-4">
-                                    <button type="submit" class="btn btn-primary">Login</button>
-                                </div>
-                            </div>
-                        </form>
+                        </div>
+                        {!! Form::close() !!}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 @endsection
