@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Database\Seeders\demo\AuthorSeeder;
-use Database\Seeders\demo\BooksTableSeeder;
+use Database\Seeders\demo\BookSeeder;
 use Database\Seeders\demo\GenreSeeder;
 use Database\Seeders\demo\UserSeeder;
 use Illuminate\Database\Seeder;
@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             AuthorSeeder::class,
             GenreSeeder::class,
-            BooksTableSeeder::class,
+            BookSeeder::class,
         ]);
     }
 }

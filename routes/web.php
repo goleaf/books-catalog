@@ -42,8 +42,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/users', function () {
         return view('modules.users');
-    })->name('users.index')->middleware('auth');
-
-
+    })->name('users.index')->middleware(['auth', 'can:manage-users']);
 });
 

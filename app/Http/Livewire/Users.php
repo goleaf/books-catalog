@@ -5,8 +5,14 @@ namespace App\Http\Livewire;
 use Livewire\Component;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Livewire component for managing users.
+ *
+ * @package App\Http\Livewire
+ */
 class Users extends Component
 {
     public $users = [];
@@ -16,162 +22,165 @@ class Users extends Component
     public $successMessage = '';
     public $errorMessages = [];
 
-    public $password = '';
-    public $password_confirmation = '';
-
-    protected $listeners = ['userDeleted' => 'loadUsers'];
-
     protected $rules = [
         'user.name' => 'required|string|max:255',
-        'user.email' => 'required|string|email|max:255',
+        'user.email' => 'required|email|max:255',
+        'user.password' => 'required|min:8',
     ];
 
     protected $messages = [
         'user.name.required' => 'The name field is required.',
-        'user.name.string' => 'The name must be a string.',
-        'user.name.max' => 'The name may not be greater than 255 characters.',
-
+        'user.name.max' => 'The name must not exceed 255 characters.',
         'user.email.required' => 'The email field is required.',
-        'user.email.string' => 'The email must be a string.',
-        'user.email.email' => 'The email must be a valid email address.',
-        'user.email.max' => 'The email may not be greater than 255 characters.',
+        'user.email.email' => 'Please enter a valid email address.',
+        'user.email.max' => 'The email must not exceed 255 characters.',
+        'user.password.required' => 'The password field is required.',
+        'user.password.min' => 'The password must be at least 8 characters long.',
     ];
 
-    public function mount()
-    {
-        $this->authorize('manage-users');
-        $this->loadUsers();
-    }
+    protected $listeners = ['deleteUser' => 'delete'];
 
-    public function loadUsers(): void
+    /**
+     * Prepare the component for user creation.
+     *
+     * @return void
+     */
+    public function create()
     {
-        $this->users = User::all();
-    }
-
-    public function sortBy($column): void
-    {
-        if ($this->sortBy === $column) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortBy = $column;
-            $this->sortDirection = 'asc';
-        }
-
-        $this->loadUsers();
-    }
-
-    public function create(): void
-    {
-        $this->authorize('manage-users');
-        $this->resetAll();
-        $this->editMode = false;
+        $this->resetForm();
         $this->showForm = true;
     }
 
-    public function store(): void
+    /**
+     * Store a newly created user in the database.
+     *
+     * @return void
+     */
+    public function store()
     {
-        $this->rules['password'] = 'required|string|min:8|confirmed';
-        $this->validate();
-
-        $this->validate(['user.email' => 'unique:users']);
-
         try {
-            User::create([
-                'name' => $this->user['name'],
-                'email' => $this->user['email'],
-                'password' => Hash::make($this->password),
-            ]);
+            $this->validate();
+            $this->user['password'] = Hash::make($this->user['password']);
+            User::create($this->user);
+            $this->resetForm();
             $this->successMessage = 'User added successfully!';
         } catch (\Exception $e) {
-            $this->handleError('adding', $e);
-        } finally {
-            $this->showForm = false;
-            $this->loadUsers();
-            $this->resetErrorBag();
+            $this->handleError('creating', $e);
         }
     }
 
-    public function edit(User $user): void
+    /**
+     * Prepare the component for user editing.
+     *
+     * @param int $id The ID of the user to edit.
+     * @return void
+     */
+    public function edit($id)
     {
-        $this->authorize('manage-users');
-        $this->resetAll();
-        $this->user = $user->toArray();
+        $this->resetForm();
+        $this->user = User::findOrFail($id)->toArray();
         $this->editMode = true;
         $this->showForm = true;
     }
 
-    public function update(): void
+    /**
+     * Update the specified user in the database.
+     *
+     * @return void
+     */
+    public function update()
     {
-        $this->authorize('manage-users');
-
-        $this->validate();
-
-        if ($this->password) {
-            $this->validate(['password' => 'string|min:8|confirmed']);
-            $this->user['password'] = Hash::make($this->password);
-        } else {
-            unset($this->user['password']);
-        }
-
-        $this->validate([
-            'user.email' => Rule::unique('users')->ignore($this->user['id']),
-        ]);
-
         try {
-            $user = User::find($this->user['id']);
-            $user->update($this->user);
+            $this->validate([
+                'user.name' => 'required|string|max:255',
+                'user.email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user['id'])],
+                'user.password' => 'nullable|min:8',
+            ]);
+
+            $user = User::findOrFail($this->user['id']);
+            $user->name = $this->user['name'];
+            $user->email = $this->user['email'];
+
+            if (!empty($this->user['password'])) {
+                $user->password = Hash::make($this->user['password']);
+            }
+
+            $user->save();
+
+            $this->resetForm();
             $this->successMessage = 'User updated successfully!';
         } catch (\Exception $e) {
             $this->handleError('updating', $e);
-        } finally {
-            $this->resetFormAndLoadUsers();
         }
     }
 
-    public function delete(User $user): void
+    /**
+     * Delete the specified user from the database.
+     *
+     * @param int $id The ID of the user to delete.
+     * @return void
+     */
+    public function delete($id)
     {
-        $this->authorize('manage-users');
-
         try {
+            if ($id === auth()->id()) {
+                $this->errorMessages[] = 'You cannot delete your own account.';
+                return;
+            }
+            $user = User::findOrFail($id);
             $user->delete();
             $this->successMessage = 'User deleted successfully!';
         } catch (\Exception $e) {
             $this->handleError('deleting', $e);
-        } finally {
-            $this->loadUsers();
         }
     }
 
-    private function resetFormAndLoadUsers(): void
+    /**
+     * Reset the form and clear any error messages.
+     *
+     * @return void
+     */
+    private function resetForm()
     {
-        $this->reset(['user', 'editMode', 'errorMessages', 'password', 'password_confirmation']);
+        $this->user = [];
         $this->showForm = false;
-        $this->loadUsers();
-    }
-
-    public function resetAll(): void
-    {
+        $this->editMode = false;
+        $this->errorMessages = [];
         $this->resetErrorBag();
-        $this->reset(['user', 'editMode', 'successMessage', 'errorMessages', 'password', 'password_confirmation']);
+        $this->resetValidation();
     }
 
-    public function cancel(): void
+    /**
+     * Cancel the current operation and reset the form.
+     *
+     * @return void
+     */
+    public function cancel()
     {
-        $this->resetAll();
-        $this->showForm = false;
+        $this->resetForm();
     }
 
-    private function handleError($action, $exception): void
+    /**
+     * Handle errors and log them.
+     *
+     * @param string $action The action that caused the error.
+     * @param \Exception $exception The exception that was thrown.
+     * @return void
+     */
+    private function handleError(string $action, \Exception $exception): void
     {
-        $this->errorMessages[] = 'Error ' . $action . ' user.';
         Log::error('Error ' . $action . ' user:', ['exception' => $exception]);
+        $this->errorMessages[] = 'An error occurred while ' . $action . ' the user. Please try again.';
     }
 
+    /**
+     * Render the users component.
+     *
+     * @return \Illuminate\View\View
+     */
     public function render()
     {
-        return view('livewire.users.index', [
-            'sortBy' => $this->sortBy,
-            'sortDirection' => $this->sortDirection,
-        ]);
+        $this->users = User::all();
+        return view('livewire.users.index');
     }
 }

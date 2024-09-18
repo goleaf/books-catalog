@@ -96,7 +96,7 @@ class Authors extends Component
      *
      * @var array
      */
-    protected $listeners = ['authorDeleted' => 'loadAuthors', 'authorUpdated' => 'loadAuthors', 'authorAdded' => 'loadAuthors'];
+    protected $listeners = ['authorDeleted' => 'loadAuthors', 'authorUpdated' => 'loadAuthors', 'authorAdded' => 'loadAuthors', 'deleteAuthor' => 'delete'];
 
     /**
      * Validation rules for the author form.

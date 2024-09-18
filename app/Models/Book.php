@@ -44,7 +44,7 @@ class Book extends Model
      */
     public function authors(): BelongsToMany
     {
-        return $this->belongsToMany(Author::class, 'author_book_rel');
+        return $this->belongsToMany(Author::class, 'rel_author_book');
     }
 
     /**
@@ -54,6 +54,6 @@ class Book extends Model
      */
     public function genres(): BelongsToMany
     {
-        return $this->belongsToMany(Genre::class, 'book_genre_rel');
+        return $this->belongsToMany(Genre::class, 'rel_book_genre');
     }
 }

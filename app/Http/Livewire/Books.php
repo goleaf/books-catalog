@@ -162,7 +162,7 @@ class Books extends Component
      *
      * @var array
      */
-    protected $listeners = ['bookDeleted' => 'loadBooks', 'bookUpdated' => 'loadBooks', 'bookAdded' => 'loadBooks'];
+    protected $listeners = ['bookDeleted' => 'loadBooks', 'bookUpdated' => 'loadBooks', 'bookAdded' => 'loadBooks', 'deleteBook' => 'delete'];
 
     /**
      * Validation rules for the book form.

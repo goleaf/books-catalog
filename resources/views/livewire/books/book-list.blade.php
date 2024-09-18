@@ -128,48 +128,116 @@
                     Genre
                 </th>
                 <th class="table-header" wire:click="sortBy('number_of_copies')">
+                    Number of copies
                     @include('livewire.partials.sort-icon', ['field' => 'number_of_copies'])
                 </th>
                 <th class="table-header text-center">Actions</th>
             </tr>
         </thead>
+
+
         <tbody>
             @foreach ($books as $book)
                 <tr>
-                    <td>{{ $book->title }}</td>
-                    <td>
-                        @foreach ($book->authors as $index => $author)
-                            {{ $author->name }}@if ($index < $book->authors->count() - 1)
-                                ,<br>
+                    <td class="align-middle">{{ $book->title }}</td>
+                    <td class="align-middle">
+                        @foreach ($book->authors as $author)
+                            {{ $author->name }}{{ !$loop->last ? ',' : '' }}
+                            @if (!$loop->last)
+                                <br>
                             @endif
                         @endforeach
                     </td>
-                    <td>{{ $book->isbn }}</td>
-                    <td>{{ $book->publication_date }}</td>
-                    <td>
+                    <td class="align-middle">{{ $book->isbn }}</td>
+                    <td class="align-middle">{{ $book->publication_date }}</td>
+                    <td class="align-middle">
                         @foreach ($book->genres as $index => $genre)
-                            {{ $genre->name }}@if ($index < $book->genres->count() - 1)
-                                ,<br>
+                            {{ $genre->name }}{{ $loop->last ? '' : ',' }}
+                            @if (!$loop->last)
+                                <br>
                             @endif
                         @endforeach
                     </td>
-                    <td>{{ $book->number_of_copies }}</td>
-                    <td class="text-end">
-                        <div class="btn-group" role="group">
-                            <button wire:click="edit({{ $book->id }})"
-                                class="btn btn-primary btn-sm d-flex align-items-center gap-2">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-
-                            <button wire:click="delete({{ $book->id }})"
-                                class="btn btn-danger btn-sm d-flex align-items-center gap-2"
-                                onclick="return confirm('Are you sure you want to delete this book?')">
-                                <i class="fas fa-trash-alt"></i> Delete
-                            </button>
+                    <td class="align-middle text-center">{{ $book->number_of_copies }}</td>
+                    <td class="align-middle text-center">
+                        <div class="btn-group" role="group" aria-label="Book actions">
+                            <button wire:click="edit({{ $book->id }})" class="btn btn-outline-primary btn-sm"
+                                title="Edit book"><i class="fas fa-edit"></i><span
+                                    class="d-none d-md-inline ms-1">Edit</span></button>
+                            <button onclick="confirmDelete({{ $book->id }}, 'book')"
+                                class="btn btn-outline-danger btn-sm" title="Delete book"><i
+                                    class="fas fa-trash-alt"></i><span
+                                    class="d-none d-md-inline ms-1">Delete</span></button>
                         </div>
                     </td>
                 </tr>
             @endforeach
         </tbody>
+
+
+
+        @foreach ($books as $book)
+            <tr>
+                <td>{{ $book->title }}</td>
+                <td>
+                    @foreach ($book->authors as $author)
+                        {{ $author->name }}{{ !$loop->last ? ',' : '' }}
+                        @if (!$loop->last)
+                            <br>
+                        @endif
+                    @endforeach
+                </td>
+                <td>{{ $book->isbn }}</td>
+                <td>{{ $book->publication_date }}</td>
+                <td>
+                    @foreach ($book->genres as $index => $genre)
+                        {{ $genre->name }}{{ $loop->last ? '' : ',' }}
+                        @if (!$loop->last)
+                            <br>
+                        @endif
+                    @endforeach
+                </td>
+                <td>{{ $book->number_of_copies }}</td>
+                <td class="text-center">
+                    <div class="btn-group" role="group" aria-label="Book actions">
+                        <button wire:click="edit({{ $book->id }})" class="btn btn-outline-primary btn-sm"
+                            title="Edit book">
+                            <i class="fas fa-edit"></i>
+                            <span class="d-none d-md-inline ms-1">Edit</span>
+                        </button>
+
+                        <button onclick="confirmDelete({{ $book->id }}, 'book')"
+                            class="btn btn-outline-danger btn-sm"
+                            onclick="return confirm('Are you sure you want to delete this book?')" title="Delete book">
+                            <i class="fas fa-trash-alt"></i>
+                            <span class="d-none d-md-inline ms-1">Delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
     </table>
-@endif
+
+    @endif
+
+
+    @push('scripts')
+        <script>
+            function confirmDelete(id, itemType) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: `You won't be able to revert this ${itemType} deletion!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.emit(`delete${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`, id);
+                    }
+                });
+            }
+        </script>
+    @endpush
