@@ -158,6 +158,8 @@ class Authors extends Component
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->get();
+
+        $this->emit('authorsLoaded');
     }
 
     /**
@@ -245,10 +247,12 @@ class Authors extends Component
             } else {
                 $author->delete();
                 $this->successMessage = 'Author deleted successfully!';
+
             }
         } catch (\Exception $e) {
             $this->handleError('deleting', $e);
         } finally {
+            $this->emit('authorDeleted');
             $this->loadAuthors();
         }
     }

@@ -184,8 +184,9 @@ This is a dynamic and user-friendly book management application built with Larav
 
 To run Laravel Pint and automatically fix any code style issues in your tests, use the following command
 
+### Books test:
 ```
-./vendor/bin/pint tests/Feature/BooksTest.php
+$ ./vendor/bin/pint tests/Feature/BooksTest.php
 
 PASS  Tests\Feature\BooksTest
 ✓ it can render books component                                                                                                                                                                                  1.84s
@@ -200,6 +201,24 @@ PASS  Tests\Feature\BooksTest
 
 Tests:    9 passed (29 assertions)
 Duration: 12.34s
+```
+### Authors test:
+```
+$ ./vendor/bin/pint tests/Feature/AuthorsTest.php
+
+PASS  Tests\Feature\AuthorsTest
+✓ it can render authors component                                                                                                                                                                                1.48s
+✓ it can load authors                                                                                                                                                                                            0.16s
+✓ it can reset filters                                                                                                                                                                                           0.09s
+✓ it can sort authors ascending                                                                                                                                                                                  0.09s
+✓ it can sort authors descending                                                                                                                                                                                 0.10s
+✓ it can filter authors                                                                                                                                                                                          0.06s
+✓ it can create a new author                                                                                                                                                                                     0.15s
+✓ it can update an existing author                                                                                                                                                                               0.11s
+✓ it can delete an author                                                                                                                                                                                        0.08s
+
+Tests:    9 passed (19 assertions)
+Duration: 2.70s
 ```
 ## Contributing
 
