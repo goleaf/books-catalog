@@ -174,70 +174,28 @@
             @endforeach
         </tbody>
 
-
-
-        @foreach ($books as $book)
-            <tr>
-                <td>{{ $book->title }}</td>
-                <td>
-                    @foreach ($book->authors as $author)
-                        {{ $author->name }}{{ !$loop->last ? ',' : '' }}
-                        @if (!$loop->last)
-                            <br>
-                        @endif
-                    @endforeach
-                </td>
-                <td>{{ $book->isbn }}</td>
-                <td>{{ $book->publication_date }}</td>
-                <td>
-                    @foreach ($book->genres as $index => $genre)
-                        {{ $genre->name }}{{ $loop->last ? '' : ',' }}
-                        @if (!$loop->last)
-                            <br>
-                        @endif
-                    @endforeach
-                </td>
-                <td>{{ $book->number_of_copies }}</td>
-                <td class="text-center">
-                    <div class="btn-group" role="group" aria-label="Book actions">
-                        <button wire:click="edit({{ $book->id }})" class="btn btn-outline-primary btn-sm"
-                            title="Edit book">
-                            <i class="fas fa-edit"></i>
-                            <span class="d-none d-md-inline ms-1">Edit</span>
-                        </button>
-
-                        <button onclick="confirmDelete({{ $book->id }}, 'book')"
-                            class="btn btn-outline-danger btn-sm"
-                            onclick="return confirm('Are you sure you want to delete this book?')" title="Delete book">
-                            <i class="fas fa-trash-alt"></i>
-                            <span class="d-none d-md-inline ms-1">Delete</span>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        @endforeach
         </tbody>
     </table>
 
-    @endif
+@endif
 
 
-    @push('scripts')
-        <script>
-            function confirmDelete(id, itemType) {
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: `You won't be able to revert this ${itemType} deletion!`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        Livewire.emit(`delete${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`, id);
-                    }
-                });
-            }
-        </script>
-    @endpush
+@push('scripts')
+    <script>
+        function confirmDelete(id, itemType) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `You won't be able to revert this ${itemType} deletion!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.emit(`delete${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`, id);
+                }
+            });
+        }
+    </script>
+@endpush

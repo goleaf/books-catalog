@@ -270,21 +270,21 @@ class Books extends Component
      */
     public function loadBooks(): void
     {
-        $this->books = Book::with('authors', 'genres')
+        $this->books = Book::with(['authors', 'genres'])
             ->when($this->searchTitle, function ($query, $searchTitle) {
                 $query->where('title', 'like', '%' . $searchTitle . '%');
             })
-            ->when($this->filterAuthor, function ($query, $filterAuthor) { // Add author filter
-                $query->whereHas('authors', function ($query) use ($filterAuthor) {
-                    $query->where('id', $filterAuthor);
+            ->when($this->filterAuthor, function ($query, $filterAuthor) {
+                $query->whereHas('authors', function ($q) use ($filterAuthor) {
+                    $q->where('id', $filterAuthor);
                 });
             })
             ->when($this->searchIsbn, function ($query, $searchIsbn) {
                 $query->where('isbn', 'like', '%' . $searchIsbn . '%');
             })
             ->when($this->filterGenre, function ($query, $filterGenre) {
-                $query->whereHas('genres', function ($query) use ($filterGenre) {
-                    $query->where('id', $filterGenre);
+                $query->whereHas('genres', function ($q) use ($filterGenre) {
+                    $q->where('id', $filterGenre);
                 });
             })
             ->when($this->filterCopiesFrom, function ($query, $filterCopiesFrom) {
@@ -293,14 +293,16 @@ class Books extends Component
             ->when($this->filterCopiesTo, function ($query, $filterCopiesTo) {
                 $query->where('number_of_copies', '<=', $filterCopiesTo);
             })
-            ->when($this->filterPublicationDateFrom, function ($query, $date) {
-                $query->where('publication_date', '>=', $date);
+            ->when($this->filterPublicationDateFrom, function ($query, $filterPublicationDateFrom) {
+                $query->where('publication_date', '>=', $filterPublicationDateFrom);
             })
-            ->when($this->filterPublicationDateTo, function ($query, $date) {
-                $query->where('publication_date', '<=', $date);
+            ->when($this->filterPublicationDateTo, function ($query, $filterPublicationDateTo) {
+                $query->where('publication_date', '<=', $filterPublicationDateTo);
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->get();
+
+        $this->emit('booksLoaded');
     }
 
     /**
@@ -363,6 +365,7 @@ class Books extends Component
             $book->authors()->attach($this->selectedAuthors);
             $book->genres()->attach($this->selectedGenres);
 
+            $this->emit('bookAdded');
             $this->successMessage = 'Book added successfully!';
         } catch (\Exception $e) {
             $this->handleError('adding', $e);
@@ -408,6 +411,7 @@ class Books extends Component
             $book->authors()->sync($this->selectedAuthors);
             $book->genres()->sync($this->selectedGenres);
 
+            $this->emit('bookUpdated');
             $this->successMessage = 'Book updated successfully!';
         } catch (\Exception $e) {
             $this->handleError('updating', $e);

@@ -180,6 +180,27 @@ This is a dynamic and user-friendly book management application built with Larav
 * **Consistent design and use of icons** for improved usability
 * **Simplified validation using Livewire's built-in capabilities**
 
+## Tests
+
+To run Laravel Pint and automatically fix any code style issues in your tests, use the following command
+
+```
+./vendor/bin/pint tests/Feature/BooksTest.php
+
+PASS  Tests\Feature\BooksTest
+✓ it can render books component                                                                                                                                                                                  1.84s
+✓ it can load books                                                                                                                                                                                              0.48s
+✓ it can reset filters                                                                                                                                                                                           2.35s
+✓ it can sort books ascending                                                                                                                                                                                    1.05s
+✓ it can sort books descending                                                                                                                                                                                   1.16s
+✓ it can filter books                                                                                                                                                                                            0.55s
+✓ it can create a new book                                                                                                                                                                                       1.94s
+✓ it can update an existing book                                                                                                                                                                                 2.17s
+✓ it can delete a book                                                                                                                                                                                           0.43s
+
+Tests:    9 passed (29 assertions)
+Duration: 12.34s
+```
 ## Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues.
