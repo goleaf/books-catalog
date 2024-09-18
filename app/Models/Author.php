@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  *
  * @property int $id
  * @property string $name
- * @property string|null $biography
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  */
@@ -24,7 +23,7 @@ class Author extends Model
      *
      * @var array<string>
      */
-    protected $fillable = ['name', 'biography'];
+    protected $fillable = ['name'];
 
     /**
      * Get the books associated with the author.
@@ -33,6 +32,6 @@ class Author extends Model
      */
     public function books(): BelongsToMany
     {
-        return $this->belongsToMany(Book::class, 'author_book_rel');
+        return $this->belongsToMany(Book::class, 'rel_author_book');
     }
 }

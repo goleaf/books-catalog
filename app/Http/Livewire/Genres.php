@@ -8,43 +8,95 @@ use Illuminate\Support\Facades\Log;
 
 class Genres extends Component
 {
-    /** @var array List of genres */
+    /**
+     * List of genres.
+     *
+     * @var array
+     */
     public $genres = [];
 
-    /** @var array|null Current genre being edited or created */
+    /**
+     * Current genre being edited or created.
+     *
+     * @var array|null
+     */
     public $genre;
 
-    /** @var bool Flag to show/hide the genre form */
+    /**
+     * Flag to show/hide the genre form.
+     *
+     * @var bool
+     */
     public $showForm = false;
 
-    /** @var bool Flag to indicate if we're in edit mode */
+    /**
+     * Flag to indicate if we're in edit mode.
+     *
+     * @var bool
+     */
     public $editMode = false;
 
-    /** @var string Success message to display */
+    /**
+     * Success message to display.
+     *
+     * @var string
+     */
     public $successMessage = '';
 
-    /** @var array Error messages to display */
+    /**
+     * Error messages to display.
+     *
+     * @var array
+     */
     public $errorMessages = [];
 
-    /** @var string Search term for genre name */
+    /**
+     * Search term for genre name.
+     *
+     * @var string
+     */
     public $searchName = '';
 
-    /** @var int|null Minimum number of books for filtering */
+    /**
+     * Minimum number of books for filtering.
+     *
+     * @var int|null
+     */
     public $filterBooksFrom = null;
 
-    /** @var int|null Maximum number of books for filtering */
+    /**
+     * Maximum number of books for filtering.
+     *
+     * @var int|null
+     */
     public $filterBooksTo = null;
 
-    /** @var string Column to sort by */
+    /**
+     * Column to sort by.
+     *
+     * @var string
+     */
     public $sortBy = 'name';
 
-    /** @var string Sort direction */
+    /**
+     * Sort direction.
+     *
+     * @var string
+     */
     public $sortDirection = 'asc';
 
-    /** @var array Event listeners */
-    protected $listeners = ['genreDeleted' => 'loadGenres', 'genreUpdated' => 'loadGenres', 'genreAdded' => 'loadGenres'];
+    /**
+     * Event listeners.
+     *
+     * @var array
+     */
+    protected $listeners = ['genreDeleted' => 'loadGenres', 'genreUpdated' => 'loadGenres', 'genreAdded' => 'loadGenres', 'deleteGenre' => 'delete'];
 
-    /** @var array Validation rules */
+    /**
+     * Validation rules.
+     *
+     * @var array
+     */
     protected array $rules = [
         'genre.name' => 'required|string|max:255|unique:genres,name',
         'searchName' => 'nullable|string|max:255',
@@ -52,7 +104,11 @@ class Genres extends Component
         'filterBooksTo' => 'nullable|integer|min:0',
     ];
 
-    /** @var array Custom error messages */
+    /**
+     * Custom error messages.
+     *
+     * @var array
+     */
     protected $messages = [
         'genre.name.required' => 'The name field is required.',
         'genre.name.string' => 'The name must be a string.',
@@ -61,7 +117,7 @@ class Genres extends Component
     ];
 
     /**
-     * Mount the component and load the initial list of genres
+     * Mount the component and load the initial list of genres.
      *
      * @return void
      */

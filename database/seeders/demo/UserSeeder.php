@@ -2,35 +2,41 @@
 
 namespace Database\Seeders\demo;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Faker\Factory as Faker;
+
 
 class UserSeeder extends Seeder
 {
     public function run()
     {
-        $users = [
-            [
-                'name' => 'John Doe',
-                'email' => 'john@example.com',
-                'password' => Hash::make('password'),
-            ],
-            [
-                'name' => 'Jane Smith',
-                'email' => 'jane@example.com',
-                'password' => Hash::make('password'),
-            ],
-            [
-                'name' => 'Admin User',
-                'email' => 'admin@example.com',
-                'is_admin' => true,
-                'password' => Hash::make('password'),
-            ],
-        ];
+        // Create admin user
+        User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@bookcatalog.com',
+            'password' => Hash::make('password'),
+            'is_admin' => true,
+        ]);
+
+        // Create regular users
+        $faker = Faker::create();
+        $users = [];
+        for ($i = 0; $i < 5; $i++) {
+            $users[] = [
+                'name' => $faker->name,
+                'email' => $faker->unique()->userName . '@bookcatalog.com',
+            ];
+        }
 
         foreach ($users as $user) {
-            User::create($user);
+            User::create([
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'password' => Hash::make('password'),
+                'is_admin' => false,
+            ]);
         }
     }
 }

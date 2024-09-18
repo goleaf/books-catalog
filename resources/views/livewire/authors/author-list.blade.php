@@ -51,20 +51,12 @@
         <tbody>
             @foreach ($authors as $author)
                 <tr>
-                    <td>{{ $author->name }}</td>
-                    <td>{{ $author->books_count }}</td>
-                    <td class="text-end">
-                        <div class="btn-group" role="group">
-                            <button wire:click="edit({{ $author->id }})"
-                                class="btn btn-primary btn-sm d-flex align-items-center gap-2">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-
-                            <button wire:click="delete({{ $author->id }})"
-                                class="btn btn-danger btn-sm d-flex align-items-center gap-2"
-                                onclick="return confirm('Are you sure you want to delete this author?')">
-                                <i class="fas fa-trash-alt"></i> Delete
-                            </button>
+                    <td class="align-middle">{{ $author->name }}</td>
+                    <td class="align-middle text-center">{{ $author->books_count }}</td>
+                    <td class="align-middle text-center">
+                        <div class="btn-group" role="group" aria-label="Author actions">
+                            <button wire:click="edit({{ $author->id }})" class="btn btn-outline-primary btn-sm" title="Edit author"><i class="fas fa-edit"></i><span class="d-none d-md-inline ms-1">Edit</span></button>
+                            <button onclick="confirmDelete({{ $author->id }}, 'author')" class="btn btn-outline-danger btn-sm" title="Delete author"><i class="fas fa-trash-alt"></i><span class="d-none d-md-inline ms-1">Delete</span></button>
                         </div>
                     </td>
                 </tr>
@@ -73,3 +65,24 @@
     </table>
 
 @endif
+
+
+@push('scripts')
+    <script>
+        function confirmDelete(id, itemType) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `You won't be able to revert this ${itemType} deletion!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.emit(`delete${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`, id);
+                }
+            });
+        }
+    </script>
+@endpush

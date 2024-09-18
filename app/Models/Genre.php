@@ -32,6 +32,6 @@ class Genre extends Model
      */
     public function books(): BelongsToMany
     {
-        return $this->belongsToMany(Book::class, 'book_genre_rel');
+        return $this->belongsToMany(Book::class, 'rel_book_genre');
     }
 }
