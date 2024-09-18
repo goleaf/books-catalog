@@ -71,7 +71,7 @@ class Books extends Component
      *
      * @var string
      */
-    public $searchAuthor = '';
+    public $filterAuthor = '';
 
     /**
      * Search term for the ISBN field.
@@ -129,9 +129,33 @@ class Books extends Component
      */
     public $filterPublicationDateTo = null;
 
+    /**
+     * Array of selected author IDs.
+     *
+     * @var array<int>
+     */
     public array $selectedAuthors = [];
+
+    /**
+     * Array of selected genre IDs.
+     *
+     * @var array<int>
+     */
     public array $selectedGenres = [];
 
+    /**
+     * Array of authors with their IDs as keys and names as values.
+     *
+     * @var array<int, string>
+     */
+    public array $authors = [];
+
+    /**
+     * Array of genres with their IDs as keys and names as values.
+     *
+     * @var array<int, string>
+     */
+    public array $genres = [];
 
     /**
      * Events this component listens for.
@@ -154,7 +178,7 @@ class Books extends Component
         'selectedGenres.*' => 'exists:genres,id',
         'book.number_of_copies' => 'required|integer',
         'searchTitle' => 'nullable|string|max:255',
-        'searchAuthor' => 'nullable|string|max:255',
+        'filterAuthor' => 'nullable|string|max:255',
         'searchIsbn' => 'nullable|string|max:13',
         'filterGenre' => 'nullable|string|max:255',
         'filterCopiesFrom' => 'nullable|integer|min:0',
@@ -192,8 +216,8 @@ class Books extends Component
         'searchTitle.string' => 'The title search term must be text.',
         'searchTitle.max' => 'The title search term may not be greater than 255 characters.',
 
-        'searchAuthor.string' => 'The author search term must be text.',
-        'searchAuthor.max' => 'The author search term may not be greater than 255 characters.',
+        'filterAuthor.string' => 'The author search term must be text.',
+        'filterAuthor.max' => 'The author search term may not be greater than 255 characters.',
 
         'searchIsbn.string' => 'The ISBN search term must be text.',
         'searchIsbn.max' => 'The ISBN search term may not be greater than 13 characters.',
@@ -225,6 +249,7 @@ class Books extends Component
      * Sort the book list by the specified column.
      *
      * @param string $column The column to sort by
+     * @return void
      */
     public function sortBy(string $column): void
     {
@@ -240,6 +265,8 @@ class Books extends Component
 
     /**
      * Load the book list from the database, applying sorting and filtering.
+     *
+     * @return void
      */
     public function loadBooks(): void
     {
@@ -247,9 +274,9 @@ class Books extends Component
             ->when($this->searchTitle, function ($query, $searchTitle) {
                 $query->where('title', 'like', '%' . $searchTitle . '%');
             })
-            ->when($this->searchAuthor, function ($query, $searchAuthor) {
-                $query->whereHas('authors', function ($query) use ($searchAuthor) {
-                    $query->where('name', 'like', '%' . $searchAuthor . '%');
+            ->when($this->filterAuthor, function ($query, $filterAuthor) { // Add author filter
+                $query->whereHas('authors', function ($query) use ($filterAuthor) {
+                    $query->where('id', $filterAuthor);
                 });
             })
             ->when($this->searchIsbn, function ($query, $searchIsbn) {
@@ -276,11 +303,27 @@ class Books extends Component
             ->get();
     }
 
+    /**
+     * Load the list of authors from the database with book counts.
+     *
+     * @return void
+     */
     public function loadAuthors(): void
     {
-        $this->authors = Author::pluck('name', 'id');
+        $this->authors = Author::withCount('books')
+            ->get()
+            ->mapWithKeys(function ($author) {
+                $bookLabel = ($author->books_count === 1) ? 'book' : 'books';
+                return [$author->id => $author->name . ' (' . $author->books_count . ' ' . $bookLabel . ')'];
+            })
+            ->toArray();
     }
 
+    /**
+     * Load the list of genres from the database with book counts.
+     *
+     * @return void
+     */
     public function loadGenres(): void
     {
         $this->genres = Genre::withCount('books')
@@ -288,11 +331,14 @@ class Books extends Component
             ->mapWithKeys(function ($genre) {
                 $bookLabel = ($genre->books_count === 1) ? 'book' : 'books';
                 return [$genre->id => $genre->name . ' (' . $genre->books_count . ' ' . $bookLabel . ')'];
-            });
+            })
+            ->toArray();
     }
 
     /**
      * Show the form for creating a new book.
+     *
+     * @return void
      */
     public function create(): void
     {
@@ -303,6 +349,8 @@ class Books extends Component
 
     /**
      * Store a new book in the database.
+     *
+     * @return void
      */
     public function store(): void
     {
@@ -329,6 +377,7 @@ class Books extends Component
      * Show the form for editing an existing book.
      *
      * @param Book $book The book to edit
+     * @return void
      */
     public function edit(Book $book): void
     {
@@ -341,9 +390,10 @@ class Books extends Component
         $this->selectedGenres = $book->genres->pluck('id')->toArray();
     }
 
-
     /**
      * Update an existing book in the database.
+     *
+     * @return void
      */
     public function update(): void
     {
@@ -352,19 +402,11 @@ class Books extends Component
         try {
             $book = Book::find($this->book['id']);
 
-            // Debug: Dump the original authors and genres before the update
-//            dump('Original Authors:', $book->authors->pluck('name')->toArray());
-//            dump('Original Genres:', $book->genres->pluck('name')->toArray());
-
             $book->update($this->book);
 
             // Sync authors and genres
             $book->authors()->sync($this->selectedAuthors);
             $book->genres()->sync($this->selectedGenres);
-
-            // Debug: Dump the updated authors and genres after the sync
-//            dump('Updated Authors:', $book->fresh()->authors->pluck('name')->toArray()); // Use fresh() to get the latest data
-//            dump('Updated Genres:', $book->fresh()->genres->pluck('name')->toArray());
 
             $this->successMessage = 'Book updated successfully!';
         } catch (\Exception $e) {
@@ -380,6 +422,7 @@ class Books extends Component
      * Delete a book from the database.
      *
      * @param Book $book The book to delete
+     * @return void
      */
     public function delete(Book $book): void
     {
@@ -396,6 +439,8 @@ class Books extends Component
 
     /**
      * Reset all form data, error messages, and success messages.
+     *
+     * @return void
      */
     public function resetAll(): void
     {
@@ -403,17 +448,22 @@ class Books extends Component
         $this->reset(['book', 'editMode', 'successMessage', 'errorMessages', 'selectedAuthors', 'selectedGenres']);
     }
 
+    /**
+     * Reset all filter fields and reload books.
+     *
+     * @return void
+     */
     public function resetFilters(): void
     {
         $this->reset([
             'searchTitle',
-            'searchAuthor',
+            'filterAuthor',
             'searchIsbn',
             'filterGenre',
             'filterCopiesFrom',
             'filterCopiesTo',
             'filterPublicationDateFrom',
-            'filterPublicationDateTo'
+            'filterPublicationDateTo',
         ]);
 
         $this->loadBooks();
@@ -421,6 +471,8 @@ class Books extends Component
 
     /**
      * Cancel the form and return to the book list.
+     *
+     * @return void
      */
     public function cancel(): void
     {
@@ -433,11 +485,11 @@ class Books extends Component
      *
      * @param string $action The action that triggered the error (e.g., 'adding', 'updating', 'deleting')
      * @param \Exception $exception The exception object
+     * @return void
      */
-    private function handleError($action, $exception): void
+    private function handleError(string $action, \Exception $exception): void
     {
-        dump('Error ' . $action . ' book:');
-        dump($exception);
+        Log::error('Error ' . $action . ' book:', ['exception' => $exception]);
     }
 
     /**
@@ -447,21 +499,13 @@ class Books extends Component
      */
     public function render()
     {
-        $genresWithCounts = Genre::withCount('books')->orderBy('name')->get();
-
-        $genres = [];
-        foreach ($genresWithCounts as $genre) {
-            $genres[$genre->id] = $genre->name . ' (' . $genre->books_count . ' books)';
-        }
-
         return view('livewire.books.index', [
-            'genres' => $genres,
-            'authors' => Author::pluck('name', 'id'),
+            'genres' => $this->genres,
+            'authors' => $this->authors,
             'sortBy' => $this->sortBy,
             'sortDirection' => $this->sortDirection,
             'books' => $this->books,
             'showForm' => $this->showForm,
         ]);
-
     }
 }

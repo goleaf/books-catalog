@@ -5,41 +5,62 @@
         <thead>
         <tr class="filters">
             <td>
-                {!! Form::text('searchTitle', $searchTitle, ['class' => 'form-control form-control-sm', 'placeholder' => 'Search by title...', 'wire:model.debounce.500ms' => 'searchTitle']) !!}
+                {!! Form::text('searchTitle', $searchTitle,
+                    ['class' => 'form-control form-control-sm', 'placeholder' => 'Search by title...',
+                    'wire:model.debounce.500ms' => 'searchTitle',
+                    'wire:keydown.enter' => 'loadBooks']) !!}
                 @error('searchTitle') <span class="text-danger">{{ $message }}</span> @enderror
             </td>
             <td>
-                {!! Form::text('searchAuthor', $searchAuthor, ['class' => 'form-control form-control-sm', 'placeholder' => 'Search by author...', 'wire:model.debounce.500ms' => 'searchAuthor']) !!}
-                @error('searchAuthor') <span class="text-danger">{{ $message }}</span> @enderror
+                {!! Form::select('filterAuthor', $authors, $filterAuthor,
+                    ['class' => 'form-select form-select-sm', 'wire:model' => 'filterAuthor','placeholder' => 'Select author']) !!}
+                @error('filterAuthor') <span class="text-danger">{{ $message }}</span> @enderror
             </td>
             <td>
-                {!! Form::text('searchIsbn', $searchIsbn, ['class' => 'form-control form-control-sm', 'placeholder' => 'Search by ISBN...', 'wire:model.debounce.500ms' => 'searchIsbn']) !!}
+                {!! Form::text('searchIsbn', $searchIsbn,
+                    ['class' => 'form-control form-control-sm', 'placeholder' => 'Search by ISBN...',
+                    'wire:model.debounce.500ms' => 'searchIsbn',
+                    'wire:keydown.enter' => 'loadBooks']) !!}
                 @error('searchIsbn') <span class="text-danger">{{ $message }}</span> @enderror
             </td>
             <td>
                 <div class="d-flex flex-column">
-                    {!! Form::date('filterPublicationDateFrom', $filterPublicationDateFrom, ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'From...', 'wire:model.defer' => 'filterPublicationDateFrom']) !!}
+                    {!! Form::date('filterPublicationDateFrom', $filterPublicationDateFrom,
+                        ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'From...',
+                        'wire:model.defer' => 'filterPublicationDateFrom',
+                        'wire:keydown.enter' => 'loadBooks']) !!}
                     @error('filterPublicationDateFrom') <span class="text-danger">{{ $message }}</span> @enderror
-                    {!! Form::date('filterPublicationDateTo', $filterPublicationDateTo, ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'To...', 'wire:model.defer' => 'filterPublicationDateTo']) !!}
+                    {!! Form::date('filterPublicationDateTo', $filterPublicationDateTo,
+                        ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'To...',
+                        'wire:model.defer' => 'filterPublicationDateTo',
+                        'wire:keydown.enter' => 'loadBooks']) !!}
                     @error('filterPublicationDateTo') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </td>
             <td>
-                {!! Form::select('filterGenre', $genres, $filterGenre, ['class' => 'form-select form-select-sm', 'wire:model' => 'filterGenre']) !!}
+                {!! Form::select('filterGenre', $genres, $filterGenre,
+                    ['class' => 'form-select form-select-sm', 'wire:model' => 'filterGenre','placeholder' => 'Select genre']) !!}
                 @error('filterGenre') <span class="text-danger">{{ $message }}</span> @enderror
             </td>
             <td>
                 <div class="d-flex flex-column">
-                    {!! Form::number('filterCopiesFrom', $filterCopiesFrom, ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'From...', 'wire:model.defer' => 'filterCopiesFrom']) !!}
+                    <span>Number of Copies</span>
+                    {!! Form::number('filterCopiesFrom', $filterCopiesFrom,
+                        ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'From...',
+                        'wire:model.defer' => 'filterCopiesFrom',
+                        'wire:keydown.enter' => 'loadBooks']) !!}
                     @error('filterCopiesFrom') <span class="text-danger">{{ $message }}</span> @enderror
-                    {!! Form::number('filterCopiesTo', $filterCopiesTo, ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'To...', 'wire:model.defer' => 'filterCopiesTo']) !!}
+                    {!! Form::number('filterCopiesTo', $filterCopiesTo,
+                        ['class' => 'form-control form-control-sm mt-1', 'placeholder' => 'To...',
+                        'wire:model.defer' => 'filterCopiesTo',
+                        'wire:keydown.enter' => 'loadBooks']) !!}
                     @error('filterCopiesTo') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </td>
             <td class="text-center">
                 <div class="d-flex align-items-center">
-                    <button wire:click="loadBooks" class="btn btn-primary btn-sm me-2">Search</button>
-                    @if($searchTitle || $searchAuthor || $searchIsbn || $filterGenre || $filterCopiesFrom || $filterCopiesTo || $filterPublicationDateFrom || $filterPublicationDateTo)
+                    {!! Form::button('Search', ['class' => 'btn btn-primary btn-sm me-2', 'wire:click' => 'loadBooks']) !!}
+                    @if($searchTitle || $filterAuthor || $searchIsbn || $filterGenre || $filterCopiesFrom || $filterCopiesTo || $filterPublicationDateFrom || $filterPublicationDateTo)
                         <button wire:click="resetFilters" class="btn btn-secondary btn-sm">Reset</button>
                     @endif
                 </div>
@@ -51,7 +72,7 @@
                 Title
                 @include('livewire.partials.sort-icon', ['field' => 'title'])
             </th>
-            <th class="table-header" wire:click="sortBy('author')">
+            <th class="table-header">
                 Author
             </th>
             <th class="table-header" wire:click="sortBy('isbn')">
@@ -62,7 +83,7 @@
                 Publication date
                 @include('livewire.partials.sort-icon', ['field' => 'publication_date'])
             </th>
-            <th class="table-header" wire:click="sortBy('genre')">
+            <th class="table-header">
                 Genre
             </th>
             <th class="table-header" wire:click="sortBy('number_of_copies')">
