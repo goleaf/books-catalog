@@ -8,19 +8,51 @@ use Illuminate\Support\Facades\Log;
 
 class Genres extends Component
 {
+    /** @var array List of genres */
     public $genres = [];
+
+    /** @var array|null Current genre being edited or created */
     public $genre;
+
+    /** @var bool Flag to show/hide the genre form */
     public $showForm = false;
+
+    /** @var bool Flag to indicate if we're in edit mode */
     public $editMode = false;
+
+    /** @var string Success message to display */
     public $successMessage = '';
+
+    /** @var array Error messages to display */
     public $errorMessages = [];
 
-    protected $listeners = ['genreDeleted' => 'loadGenres'];
+    /** @var string Search term for genre name */
+    public $searchName = '';
 
-    protected $rules = [
+    /** @var int|null Minimum number of books for filtering */
+    public $filterBooksFrom = null;
+
+    /** @var int|null Maximum number of books for filtering */
+    public $filterBooksTo = null;
+
+    /** @var string Column to sort by */
+    public $sortBy = 'name';
+
+    /** @var string Sort direction */
+    public $sortDirection = 'asc';
+
+    /** @var array Event listeners */
+    protected $listeners = ['genreDeleted' => 'loadGenres', 'genreUpdated' => 'loadGenres', 'genreAdded' => 'loadGenres'];
+
+    /** @var array Validation rules */
+    protected array $rules = [
         'genre.name' => 'required|string|max:255|unique:genres,name',
+        'searchName' => 'nullable|string|max:255',
+        'filterBooksFrom' => 'nullable|integer|min:0',
+        'filterBooksTo' => 'nullable|integer|min:0',
     ];
 
+    /** @var array Custom error messages */
     protected $messages = [
         'genre.name.required' => 'The name field is required.',
         'genre.name.string' => 'The name must be a string.',
@@ -30,6 +62,8 @@ class Genres extends Component
 
     /**
      * Mount the component and load the initial list of genres
+     *
+     * @return void
      */
     public function mount(): void
     {
@@ -37,24 +71,60 @@ class Genres extends Component
     }
 
     /**
-     * Load the genres from the database
+     * Sort genres by the given column
+     *
+     * @param string $column The column to sort by
+     * @return void
+     */
+    public function sortBy(string $column): void
+    {
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortDirection = 'asc';
+        }
+
+        $this->sortBy = $column;
+        $this->loadGenres();
+    }
+
+    /**
+     * Load genres based on current filters and sorting
+     *
+     * @return void
      */
     public function loadGenres(): void
     {
-        $this->genres = Genre::all();
+        $this->genres = Genre::withCount('books')
+            ->when($this->searchName, function ($query, $searchName) {
+                $query->where('name', 'like', '%' . $searchName . '%');
+            })
+            ->when($this->filterBooksFrom, function ($query, $filterBooksFrom) {
+                $query->has('books', '>=', $filterBooksFrom);
+            })
+            ->when($this->filterBooksTo, function ($query, $filterBooksTo) {
+                $query->has('books', '<=', $filterBooksTo);
+            })
+            ->orderBy($this->sortBy, $this->sortDirection)
+            ->get();
     }
 
     /**
      * Show the form for creating a new genre
+     *
+     * @return void
      */
     public function create(): void
     {
-        $this->reset(['genre', 'editMode']);
+        $this->resetAll();
+        $this->editMode = false;
         $this->showForm = true;
     }
 
     /**
      * Store a new genre in the database
+     *
+     * @return void
      */
     public function store(): void
     {
@@ -63,10 +133,13 @@ class Genres extends Component
         try {
             Genre::create($this->genre);
             $this->successMessage = 'Genre added successfully!';
+            $this->emit('genreAdded');
         } catch (\Exception $e) {
             $this->handleError('adding', $e);
         } finally {
-            $this->resetFormAndLoadGenres();
+            $this->showForm = false;
+            $this->loadGenres();
+            $this->resetErrorBag();
         }
     }
 
@@ -74,9 +147,11 @@ class Genres extends Component
      * Show the form for editing an existing genre
      *
      * @param Genre $genre The genre to edit
+     * @return void
      */
     public function edit(Genre $genre): void
     {
+        $this->resetAll();
         $this->genre = $genre->toArray();
         $this->editMode = true;
         $this->showForm = true;
@@ -84,19 +159,24 @@ class Genres extends Component
 
     /**
      * Update an existing genre in the database
+     *
+     * @return void
      */
     public function update(): void
     {
         $this->validate();
 
         try {
-            $genre = Genre::findOrFail($this->genre['id']);
+            $genre = Genre::find($this->genre['id']);
             $genre->update($this->genre);
             $this->successMessage = 'Genre updated successfully!';
+            $this->emit('genreUpdated');
         } catch (\Exception $e) {
             $this->handleError('updating', $e);
         } finally {
-            $this->resetFormAndLoadGenres();
+            $this->showForm = false;
+            $this->loadGenres();
+            $this->resetErrorBag();
         }
     }
 
@@ -104,6 +184,7 @@ class Genres extends Component
      * Delete a genre from the database
      *
      * @param Genre $genre The genre to delete
+     * @return void
      */
     public function delete(Genre $genre): void
     {
@@ -122,29 +203,70 @@ class Genres extends Component
     }
 
     /**
-     * Handle errors that occur during genre operations
+     * Reset all form fields and messages
      *
-     * @param string $action The action that triggered the error (e.g., 'adding', 'updating', 'deleting')
-     * @param \Exception $exception The exception object
-     */
-    private function handleError($action, $exception): void
-    {
-        $this->errorMessages[] = 'Error ' . $action . ' genre.';
-        Log::error('Error ' . $action . ' genre:', ['exception' => $exception]);
-    }
-
-    /**
-     * Reset the form, hide it and reload genres
+     * @return void
      */
     private function resetFormAndLoadGenres(): void
     {
-        $this->reset(['genre', 'editMode', 'errorMessages']);
-        $this->showForm = false;
+        $this->reset(['searchName', 'filterBooksFrom', 'filterBooksTo']);
         $this->loadGenres();
     }
 
+
+    public function resetAll(): void
+    {
+        $this->resetErrorBag();
+        $this->reset(['genre', 'editMode', 'successMessage', 'errorMessages']);
+    }
+
+    /**
+     * Reset filters and reload genres
+     *
+     * @return void
+     */
+    public function resetFilters(): void
+    {
+        $this->reset(['searchName', 'filterBooksFrom', 'filterBooksTo']);
+        $this->loadGenres();
+    }
+
+    /**
+     * Cancel form editing
+     *
+     * @return void
+     */
+    public function cancel(): void
+    {
+        $this->resetAll();
+        $this->showForm = false;
+    }
+
+    /**
+     * Handle errors and log them
+     *
+     * @param string $action The action that caused the error
+     * @param \Exception $exception The exception that was thrown
+     * @return void
+     */
+    private function handleError(string $action, \Exception $exception): void
+    {
+        Log::error('Error ' . $action . ' genre:', ['exception' => $exception]);
+        $this->errorMessages[] = 'An error occurred while ' . $action . ' the genre. Please try again.';
+    }
+
+    /**
+     * Render the component
+     *
+     * @return \Illuminate\View\View
+     */
     public function render()
     {
-        return view('livewire.genres.index');
+        return view('livewire.genres.index', [
+            'sortBy' => $this->sortBy,
+            'sortDirection' => $this->sortDirection,
+            'genres' => $this->genres,
+            'showForm' => $this->showForm,
+        ]);
     }
 }

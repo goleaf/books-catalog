@@ -2,9 +2,6 @@
 
 use App\Http\Controllers\LoginRegisterController;
 use Illuminate\Support\Facades\Route;
-//use App\Http\Livewire\Auth\Login;
-//use App\Http\Livewire\Auth\Logout;
-//use App\Http\Livewire\Auth\Register;
 use App\Http\Livewire\Books;
 use App\Http\Livewire\Authors;
 use App\Http\Livewire\Genres;
@@ -13,10 +10,6 @@ use App\Http\Livewire\Users;
 Route::get('/', function () {
     return Auth::check() ? redirect()->route('books.index') : redirect()->route('auth.login');
 });
-
-//Route::match(['get', 'post'], 'login', Login::class)->name('login');
-//Route::post('logout', Logout::class)->name('logout');
-//Route::match(['get', 'post'], 'register', Register::class)->name('register');
 
 
 Route::controller(LoginRegisterController::class)->group(function() {
@@ -36,9 +29,20 @@ Route::middleware(['auth'])->group(function () {
         return view('modules.books');
     })->name('books.index')->middleware('auth');
 
-    Route::get('/authors', Authors::class)->name('authors.index')->middleware('auth');
-    Route::get('/genres', Genres::class)->name('genres.index')->middleware('auth');
-    Route::get('/users', Users::class)->name('users.index')->middleware('auth');
+
+    Route::get('/authors', function () {
+        return view('modules.authors');
+    })->name('authors.index')->middleware('auth');
+
+
+    Route::get('/genres', function () {
+        return view('modules.genres');
+    })->name('genres.index')->middleware('auth');
+
+
+    Route::get('/users', function () {
+        return view('modules.users');
+    })->name('users.index')->middleware('auth');
 
 
 });

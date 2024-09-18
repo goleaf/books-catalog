@@ -8,8 +8,7 @@
 
                     <div class="mb-3">
                         {!! Form::label('name', __('Name'), ['class' => 'form-label']) !!}
-                        {!! Form::text('name', $editMode ? $genre['name'] : null,
-                            ['class' => 'form-control' . ($errors->has('genre.name') ? ' is-invalid' : ''), 'required']) !!}
+                        {!! Form::text('name', null, ['class' => 'form-control' . ($errors->has('genre.name') ? ' is-invalid' : ''), 'wire:model.defer' => 'genre.name', 'required']) !!}
                         @error('genre.name') <span class="invalid-feedback">{{ $message }}</span> @enderror
                     </div>
 
@@ -26,3 +25,4 @@
         </div>
     </div>
 </div>
+
