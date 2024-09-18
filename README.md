@@ -1,8 +1,6 @@
 # Book Management Application
 
-This is a dynamic and user-friendly book management application built with Laravel and Livewire. 
-
-It provides a seamless interface for performing CRUD (Create, Read, Update, Delete) operations on book records without requiring page reloads.
+This is a dynamic and user-friendly book management application built with Laravel and Livewire. It provides a seamless interface for performing CRUD (Create, Read, Update, Delete) operations on book records without requiring page reloads.
 
 ## Key Features
 
@@ -90,22 +88,81 @@ It provides a seamless interface for performing CRUD (Create, Read, Update, Dele
 * **PHPUnit**
 * **Spatie Laravel Ignition**
 
+## Requirements
+
+* PHP >= 8.3
+* Composer
+* Node.js and npm
+* MySQL or another database supported by Laravel
+
 ## Installation and Setup
 
-1. Clone the repository.
-2. Run `composer install`.
-3. Run `npm install`.
-4. Copy `.env.example` to `.env` and configure your database connection.
-5. Run `php artisan key:generate`.
-6. Run `php artisan migrate`.
-7. (Optional) Run `php artisan db:seed` to seed the database with sample data.
-8. Run `npm run dev` or `npm run build`.
-9. Start your Laravel development server (e.g., `php artisan serve`).
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/book-management-app.git
+   cd book-management-app
+   ```
+
+2. Install PHP dependencies:
+   ```
+   composer install
+   ```
+
+3. Install JavaScript dependencies:
+   ```
+   npm install
+   ```
+
+4. Create a copy of the `.env.example` file and rename it to `.env`:
+   ```
+   cp .env.example .env
+   ```
+
+5. Generate an application key:
+   ```
+   php artisan key:generate
+   ```
+
+6. Configure your database connection in the `.env` file:
+   ```
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=your_database_name
+   DB_USERNAME=your_database_username
+   DB_PASSWORD=your_database_password
+   ```
+
+7. Run database migrations:
+   ```
+   php artisan migrate
+   ```
+
+8. (Optional) Seed the database with sample data:
+   ```
+   php artisan db:seed
+   ```
+
+9. Compile assets:
+   ```
+   npm run dev
+   ```
+   or for production:
+   ```
+   npm run build
+   ```
+
+10. Start the Laravel development server:
+    ```
+    php artisan serve
+    ```
+
+11. Visit `http://localhost:8000` in your web browser to access the application.
 
 ## Database
 
-* **Migrations:** The application utilizes Laravel's migration system to manage the database schema. You can find the migration file for the `books` table in the `database/migrations` directory.
-* **Seeders:** (Optional) If you want to populate your database with sample data, you can create seeders for your `Book` model and run them using the `php artisan db:seed` command.
+* **Migrations:** The application utilizes Laravel's migration system to manage the database schema. You can find the migration files in the `database/migrations` directory.
+* **Seeders:** (Optional) If you want to populate your database with sample data, you can create seeders for your models and run them using the `php artisan db:seed` command.
 
 ## How to Use
 
@@ -123,35 +180,6 @@ It provides a seamless interface for performing CRUD (Create, Read, Update, Dele
 * **Clearer and more informative flash messages**
 * **Consistent design and use of icons** for improved usability
 * **Simplified validation using Livewire's built-in capabilities**
-
-## TODOs
-
-* **Backend**
-    * Implement a basic authentication system (login/logout) for library employees.
-    * Restrict book registration functionality to authenticated users.
-    * Write unit tests for the main functionalities (authentication, book registration, book management).
-    * Implement security measures to protect against common vulnerabilities (e.g., CSRF, SQL injection).
-    * Implement proper error handling and display user-friendly error messages.
-
-* **Search and Filtering:**
-    * Implement a search bar to allow users to search for books by title, author, or ISBN.
-    * Add filtering options to narrow down the book list based on genre, publication date, or other criteria.
-
-* **Book Borrowing and Returns:**
-    * Extend the application to track book borrowing and returns.
-    * Allow users to mark books as borrowed or returned.
-    * Implement features to manage due dates, overdue books, and fines.
-
-* **User Management:**
-    * If applicable, add functionality to manage library members or patrons.
-    * Allow users to register, log in, and view their borrowing history.
-
-* **Book Availability Status:**
-    * Display the availability status of each book (e.g., available, borrowed).
-    * Allow users to place holds on books that are currently borrowed.
-
-* **Book Cover Images:**
-    * Enable uploading and displaying book cover images.
 
 ## Contributing
 
