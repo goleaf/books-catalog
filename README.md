@@ -99,7 +99,7 @@ This is a dynamic and user-friendly book management application built with Larav
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/book-management-app.git
+   git clone https://github.com/goleaf/books-catalog.git
    cd book-management-app
    ```
 
