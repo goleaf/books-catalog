@@ -144,11 +144,11 @@ This is a dynamic and user-friendly book management application built with Larav
 
 9. Compile assets:
    ```
-   npm run dev
+   npm install && npm run dev
    ```
    or for production:
    ```
-   npm run build
+   npm install && npm run build
    ```
 
 10. Start the Laravel development server:
