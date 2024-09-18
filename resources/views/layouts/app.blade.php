@@ -93,7 +93,7 @@
 
     <footer class="bg-light py-3 mt-auto shadow-sm">
         <div class="container-fluid text-center">
-            <p class="mb-0">&copy; {{ date('Y') }}All rights reserved.</p>
+            <p class="mb-0">&copy; {{ date('Y') }} All rights reserved.</p>
         </div>
     </footer>
 
